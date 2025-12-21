@@ -1,0 +1,64 @@
+﻿<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TerraForger</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+  </head>
+  <body>
+    <main class="layout">
+      <header class="title">
+        <h1>TerraForger</h1>
+        <p>掘る・置く・探索の最小体験版</p>
+      </header>
+      <section class="main-grid">
+        <aside class="panel-box left-panel">
+          <h2 class="panel-title">クラフト</h2>
+          <p class="panel-note">準備中</p>
+        </aside>
+        <div id="game" class="game-panel"></div>
+        <aside class="panel-box right-panel">
+          <section class="panel-section">
+            <h2 class="panel-title">ステータス</h2>
+            <p class="status-line" id="coordText">座標: -</p>
+            <p class="status-line" id="reachText">リーチ範囲: -</p>
+          </section>
+          <section class="panel-section">
+            <h2 class="panel-title">装備</h2>
+            <div class="slot-row equipment-row" id="equipmentSlots">
+              <div class="slot" data-equip="1"><span class="slot-label">1</span></div>
+              <div class="slot" data-equip="2"><span class="slot-label">2</span></div>
+              <div class="slot" data-equip="3"><span class="slot-label">3</span></div>
+              <div class="slot" data-equip="4"><span class="slot-label">4</span></div>
+              <div class="slot" data-equip="5"><span class="slot-label">5</span></div>
+            </div>
+          </section>
+          <section class="panel-section">
+            <h2 class="panel-title">所持アイテム</h2>
+            <div class="slot-grid" id="inventoryGrid"></div>
+          </section>
+        </aside>
+      </section>
+      <section class="panel">
+        <h2>操作方法</h2>
+        <ul>
+          <li>移動: A / D または ← / →</li>
+          <li>ジャンプ: W / Space / ↑</li>
+          <li>掘る: 左クリック</li>
+          <li>置く: 右クリック (土ブロック)</li>
+        </ul>
+      </section>
+    </main>
+    <script src="js/state.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

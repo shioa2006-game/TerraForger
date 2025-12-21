@@ -1,0 +1,200 @@
+﻿:root {
+  color-scheme: light;
+  --bg: #1c2230;
+  --panel: #252d3d;
+  --ink: #e4e7ee;
+  --accent: #f6d27a;
+  --field: #1e2533;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #2b3548 0%, #1c2230 55%, #141a25 100%);
+  color: var(--ink);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 24px;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 3fr) minmax(220px, 1.2fr);
+  gap: 16px;
+  min-height: 0;
+}
+
+.title h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title p {
+  margin: 6px 0 0;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.panel-box {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px;
+  border: 2px solid #b9905a;
+  min-height: 0;
+}
+
+.panel-title {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.panel-note {
+  margin: 0;
+  color: #c0c5d2;
+  font-weight: 600;
+}
+
+.panel-section + .panel-section {
+  margin-top: 16px;
+}
+
+.status-line {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+
+.slot-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.slot-row.equipment-row {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.slot-row .slot {
+  height: 42px;
+}
+
+.slot {
+  position: relative;
+  border-radius: 10px;
+  border: 2px solid #8f6c3a;
+  background: #0f1118;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slot.selected {
+  border-color: #f6d27a;
+  background: linear-gradient(160deg, #3a2c16 0%, #1b140c 100%);
+  box-shadow: 0 0 0 2px rgba(246, 210, 122, 0.65) inset, 0 0 12px rgba(246, 210, 122, 0.45);
+}
+
+.slot-label {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 0.7rem;
+  color: #d7dbe6;
+  font-weight: 700;
+}
+
+.slot.selected .slot-label {
+  color: #ffe3a0;
+}
+
+.slot-count {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 0.7rem;
+  color: #e6ebf5;
+  font-weight: 700;
+}
+
+.slot-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background-repeat: no-repeat;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.slot-grid .slot {
+  height: 42px;
+}
+
+#game {
+  border: 3px solid #b9905a;
+  border-radius: 18px;
+  background: var(--field);
+  padding: 12px;
+  box-shadow: 0 24px 40px rgba(12, 14, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+canvas {
+  display: block;
+  width: auto !important;
+  height: 100% !important;
+  border-radius: 12px;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px 20px;
+  border: 2px solid #b9905a;
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .title h1 {
+    font-size: 1.6rem;
+  }
+}
+
