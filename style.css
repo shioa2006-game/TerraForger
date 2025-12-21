@@ -87,7 +87,7 @@ body {
 }
 
 .slot-row .slot {
-  height: 42px;
+  height: 48px;
 }
 
 .slot {
@@ -129,8 +129,8 @@ body {
 }
 
 .slot-icon {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   background-repeat: no-repeat;
@@ -197,4 +197,3 @@ canvas {
     font-size: 1.6rem;
   }
 }
-
