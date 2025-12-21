@@ -17,20 +17,24 @@ body {
   background: radial-gradient(circle at top, #2b3548 0%, #1c2230 55%, #141a25 100%);
   color: var(--ink);
   height: 100vh;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .layout {
   height: 100vh;
+  width: 100%;
+  min-width: 1200px;
+  margin: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 16px;
   padding: 24px;
 }
 
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(0, 3fr) minmax(220px, 1.2fr);
+  grid-template-columns: 220px 1fr 320px;
   gap: 16px;
   min-height: 0;
 }
@@ -161,8 +165,8 @@ body {
 
 canvas {
   display: block;
-  width: auto !important;
-  height: 100% !important;
+  width: 960px;
+  height: 540px;
   border-radius: 12px;
 }
 
@@ -231,17 +235,15 @@ canvas {
   line-height: 1.6;
 }
 
+.control-list {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.6;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 720px) {
-  .layout {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .title h1 {
-    font-size: 1.6rem;
+  body {
+    overflow-x: auto;
   }
 }

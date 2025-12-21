@@ -44,6 +44,18 @@ function addPlaceable(blockType, col, row) {
   GameState.placeables.push(placeable);
 }
 
+// 設置物を取り除く
+function removePlaceableAt(col, row) {
+  for (let i = 0; i < GameState.placeables.length; i += 1) {
+    const placeable = GameState.placeables[i];
+    if (placeable.col === col && placeable.row === row) {
+      GameState.placeables.splice(i, 1);
+      return placeable;
+    }
+  }
+  return null;
+}
+
 // 地表の高さをノイズで作る
 function generateSurfaceHeights() {
   const heights = [];

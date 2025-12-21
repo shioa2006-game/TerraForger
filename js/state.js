@@ -7,7 +7,7 @@ const GameState = {
   player: null,
   cameraPos: { x: 0, y: 0 },
   keyState: { left: false, right: false, up: false },
-  reachRange: 4,
+  reachRange: 3,
   selectedEquipIndex: 0,
   equipmentSlots: [],
   inventorySlots: [],
