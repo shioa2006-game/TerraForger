@@ -3,9 +3,13 @@ const PLAYER_FRAME_SIZE = 36;
 const PLAYER_HEAD_HEIGHT = 36;
 const PLAYER_BODY_HEIGHT = 36;
 const PLAYER_SHEET_ROW = 0;
+const PLAYER_SPRITE_GAP = 6;
 const PLAYER_BODY_FRAMES = 2;
 const PLAYER_BODY_FRAME_INTERVAL = 10;
 const ITEM_FRAME_SIZE = 36;
+const ITEM_SPRITE_GAP = 6;
+const PLACEABLE_FRAME_SIZE = 36;
+const PLACEABLE_SPRITE_GAP = 6;
 function drawWorld() {
   const startCol = max(0, floor(GameState.cameraPos.x / GameState.tileSize) - 1);
   const endCol = min(GameState.worldCols - 1, floor((GameState.cameraPos.x + width) / GameState.tileSize) + 1);
@@ -23,8 +27,58 @@ function drawWorld() {
   }
 }
 
+// 設置物を描画する
+function drawPlaceables() {
+  if (!GameState.placeableSprite) {
+    return;
+  }
+
+  for (let i = 0; i < GameState.placeables.length; i += 1) {
+    const placeable = GameState.placeables[i];
+    const placeableIndex = getPlaceableSpriteIndex(placeable.blockType);
+    if (placeableIndex < 0) {
+      continue;
+    }
+    const x = placeable.col * GameState.tileSize;
+    const y = placeable.row * GameState.tileSize;
+    const srcX = placeableIndex * (PLACEABLE_FRAME_SIZE + PLACEABLE_SPRITE_GAP);
+    imageMode(CORNER);
+    image(
+      GameState.placeableSprite,
+      x,
+      y,
+      GameState.tileSize,
+      GameState.tileSize,
+      srcX,
+      0,
+      PLACEABLE_FRAME_SIZE,
+      PLACEABLE_FRAME_SIZE
+    );
+  }
+}
+
 // ブロック描画は色と陰影で立体感を出す
 function drawBlock(col, row, blockType) {
+  const placeableIndex = getPlaceableSpriteIndex(blockType);
+  if (placeableIndex >= 0 && GameState.placeableSprite) {
+    const x = col * GameState.tileSize;
+    const y = row * GameState.tileSize;
+    const srcX = placeableIndex * (PLACEABLE_FRAME_SIZE + PLACEABLE_SPRITE_GAP);
+    imageMode(CORNER);
+    image(
+      GameState.placeableSprite,
+      x,
+      y,
+      GameState.tileSize,
+      GameState.tileSize,
+      srcX,
+      0,
+      PLACEABLE_FRAME_SIZE,
+      PLACEABLE_FRAME_SIZE
+    );
+    return;
+  }
+
   const colors = BlockColors[blockType];
   if (!colors) {
     return;
@@ -67,8 +121,8 @@ function drawPlayer() {
   const dir = GameState.player.dir >= 0 ? "right" : "left";
   const headIndex = 0;
   const bodyIndex = getBodyFrameIndex();
-  const headSx = headIndex * PLAYER_FRAME_SIZE;
-  const bodySx = bodyIndex * PLAYER_FRAME_SIZE;
+  const headSx = headIndex * (PLAYER_FRAME_SIZE + PLAYER_SPRITE_GAP);
+  const bodySx = bodyIndex * (PLAYER_FRAME_SIZE + PLAYER_SPRITE_GAP);
   const headSy = PLAYER_SHEET_ROW * PLAYER_FRAME_SIZE;
   const bodySy = PLAYER_SHEET_ROW * PLAYER_FRAME_SIZE;
 
@@ -126,7 +180,7 @@ function drawToolOverlay(playerDrawLeft, playerDrawTop, dir) {
   const toolIndex = getToolSpriteIndex(selectedItem.tool);
   const anchorX = playerDrawLeft + 9;
   const anchorY = playerDrawTop + 54;
-  const srcX = toolIndex * ITEM_FRAME_SIZE;
+  const srcX = toolIndex * (ITEM_FRAME_SIZE + ITEM_SPRITE_GAP);
   const srcY = 0;
 
   push();
@@ -191,4 +245,3 @@ function drawBlockCursor() {
   rect(col * GameState.tileSize, row * GameState.tileSize, GameState.tileSize, GameState.tileSize);
   strokeWeight(1);
 }
-

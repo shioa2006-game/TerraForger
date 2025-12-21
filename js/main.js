@@ -2,6 +2,7 @@
 function preload() {
   GameState.playerSprite = loadImage("assets/player.png");
   GameState.itemSprite = loadImage("assets/items.png");
+  GameState.placeableSprite = loadImage("assets/placeables.png");
 }
 
 function setup() {
@@ -29,6 +30,7 @@ function draw() {
   push();
   translate(-GameState.cameraPos.x, -GameState.cameraPos.y);
   drawWorld();
+  drawPlaceables();
   drawPlayer();
   drawParticles();
   drawBlockCursor();
@@ -77,4 +79,3 @@ function screenToWorld(screenX, screenY) {
     y: screenY + GameState.cameraPos.y,
   };
 }
-

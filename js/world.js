@@ -2,6 +2,7 @@
 function initWorld() {
   noiseSeed(8);
   GameState.world = new Array(GameState.worldCols).fill(0).map(() => new Array(GameState.worldRows).fill(0));
+  initPlaceables();
 
   const surfaceHeights = generateSurfaceHeights();
   buildGroundLayers(surfaceHeights);
@@ -9,6 +10,38 @@ function initWorld() {
   carveCaves(surfaceHeights);
   scatterOres(surfaceHeights);
   plantTrees(surfaceHeights);
+}
+
+// 設置物のリストを初期化する
+function initPlaceables() {
+  GameState.placeables = [];
+}
+
+// 指定タイルに設置物があるか確認する
+function getPlaceableAt(col, row) {
+  for (let i = 0; i < GameState.placeables.length; i += 1) {
+    const placeable = GameState.placeables[i];
+    if (placeable.col === col && placeable.row === row) {
+      return placeable;
+    }
+  }
+  return null;
+}
+
+// 指定タイルが設置物で埋まっているか確認する
+function isPlaceableOccupied(col, row) {
+  return getPlaceableAt(col, row) !== null;
+}
+
+// 設置物を追加する
+function addPlaceable(blockType, col, row) {
+  const placeable = { blockType, col, row };
+  if (blockType === BlockType.CHEST) {
+    // 収納箱は専用のスロットを持つ
+    placeable.storage = new Array(60).fill(null);
+    placeable.storageCounts = {};
+  }
+  GameState.placeables.push(placeable);
 }
 
 // 地表の高さをノイズで作る

@@ -15,9 +15,12 @@ const GameState = {
   particles: [],
   backgroundStars: [],
   clouds: [],
+  placeables: [],
+  activePlaceable: null,
   timeOfDay: 0,
   playerSprite: null,
   itemSprite: null,
+  placeableSprite: null,
   pickaxeSwing: 0,
   pickaxeSwingDir: 1,
 };
@@ -50,6 +53,8 @@ const BlockType = {
   DIAMOND: 9,
   SAND: 10,
   BRICK: 11,
+  CHEST: 12,
+  WORKBENCH: 13,
 };
 
 // ブロックの色定義
@@ -77,6 +82,8 @@ const BlockNames = {
   [BlockType.LEAVES]: "葉",
   [BlockType.SAND]: "砂",
   [BlockType.BRICK]: "レンガ",
+  [BlockType.CHEST]: "収納箱",
+  [BlockType.WORKBENCH]: "作業机",
 };
 
 // 設置できるブロックの並び
@@ -87,7 +94,25 @@ const PlaceableBlocks = [
   BlockType.SAND,
   BlockType.BRICK,
   BlockType.LEAVES,
+  BlockType.CHEST,
+  BlockType.WORKBENCH,
 ];
+
+// 設置物スプライトの参照位置
+const PlaceableSpriteIndex = {
+  [BlockType.CHEST]: 4,
+  [BlockType.WORKBENCH]: 5,
+};
+
+// 設置物スプライトの位置を返す（未対応は-1）
+function getPlaceableSpriteIndex(blockType) {
+  return PlaceableSpriteIndex[blockType] ?? -1;
+}
+
+// オブジェクト扱いの設置物かどうか判定する
+function isPlaceableObject(blockType) {
+  return getPlaceableSpriteIndex(blockType) >= 0;
+}
 
 function getSelectedEquipment() {
   return GameState.equipmentSlots[GameState.selectedEquipIndex] || null;
