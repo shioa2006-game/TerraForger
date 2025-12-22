@@ -398,6 +398,17 @@ function updateEquipmentSlots() {
       entry.slot.setAttribute("draggable", "false");
       continue;
     }
+
+    // 所持数が0のブロックはスロットから削除
+    if (item.kind === ItemKind.BLOCK && (GameState.inventory[item.blockType] || 0) <= 0) {
+      GameState.equipmentSlots[i] = null;
+      entry.icon.style.background = "transparent";
+      entry.icon.style.backgroundImage = "";
+      entry.icon.style.opacity = "0.35";
+      entry.slot.setAttribute("draggable", "false");
+      continue;
+    }
+
     entry.slot.setAttribute("draggable", "true");
 
     if (item.kind === ItemKind.BLOCK) {
@@ -420,6 +431,17 @@ function updateInventorySlots() {
     const item = GameState.inventorySlots[i];
 
     if (!item) {
+      entry.icon.style.background = "transparent";
+      entry.icon.style.backgroundImage = "";
+      entry.icon.style.opacity = "0.35";
+      entry.count.textContent = "";
+      entry.slot.setAttribute("draggable", "false");
+      continue;
+    }
+
+    // 所持数が0のブロックはスロットから削除
+    if (item.kind === ItemKind.BLOCK && (GameState.inventory[item.blockType] || 0) <= 0) {
+      GameState.inventorySlots[i] = null;
       entry.icon.style.background = "transparent";
       entry.icon.style.backgroundImage = "";
       entry.icon.style.opacity = "0.35";
