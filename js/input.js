@@ -311,9 +311,23 @@ function isChestEmpty(placeable) {
   return true;
 }
 
+// 装備欄でブロック種別のスロットを探す
+function findEquipmentSlotByBlock(blockType) {
+  for (let i = 0; i < GameState.equipmentSlots.length; i += 1) {
+    const item = GameState.equipmentSlots[i];
+    if (item && item.kind === ItemKind.BLOCK && item.blockType === blockType) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 // ブロックスロットを所持アイテム内に確保する
 function ensureInventorySlotForBlock(blockType) {
   if (findInventorySlotByBlock(blockType) !== -1) {
+    return true;
+  }
+  if (findEquipmentSlotByBlock(blockType) !== -1) {
     return true;
   }
   const emptyIndex = findEmptyInventoryIndex();
