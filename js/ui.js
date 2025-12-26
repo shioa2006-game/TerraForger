@@ -17,10 +17,14 @@ const CHEST_SLOT_COUNT = CHEST_COLUMNS * CHEST_ROWS;
 
 function initInventory() {
   GameState.inventory = {};
-  // ブロックは初期インベントリに含めず、壊したブロックのみ所持可能にする
+  // 収納箱と作業机を初期所持アイテムに追加
+  GameState.inventory[BlockType.CHEST] = 1;
+  GameState.inventory[BlockType.WORKBENCH] = 1;
 
   GameState.inventorySlots = new Array(30).fill(null);
-  // ブロックスロットは空で開始
+  // 収納箱と作業机のスロットを追加
+  GameState.inventorySlots[0] = { kind: ItemKind.BLOCK, blockType: BlockType.CHEST };
+  GameState.inventorySlots[1] = { kind: ItemKind.BLOCK, blockType: BlockType.WORKBENCH };
 
   GameState.equipmentSlots = [
     { kind: ItemKind.TOOL, tool: ToolType.PICKAXE },
