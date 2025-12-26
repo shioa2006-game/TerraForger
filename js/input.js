@@ -86,6 +86,17 @@ function mousePressed() {
       createBlockParticles(col, row, blockType);
       if (PlaceableBlocks.includes(blockType)) {
         GameState.inventory[blockType] = (GameState.inventory[blockType] || 0) + 1;
+
+        // インベントリスロットにブロックがなければ追加
+        const hasSlot = GameState.inventorySlots.some(
+          slot => slot && slot.kind === ItemKind.BLOCK && slot.blockType === blockType
+        );
+        if (!hasSlot) {
+          const emptyIndex = GameState.inventorySlots.findIndex(slot => slot === null);
+          if (emptyIndex !== -1) {
+            GameState.inventorySlots[emptyIndex] = { kind: ItemKind.BLOCK, blockType: blockType };
+          }
+        }
       }
     }
   } else if (mouseButton === RIGHT) {

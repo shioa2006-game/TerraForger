@@ -17,15 +17,10 @@ const CHEST_SLOT_COUNT = CHEST_COLUMNS * CHEST_ROWS;
 
 function initInventory() {
   GameState.inventory = {};
-  for (let i = 0; i < PlaceableBlocks.length; i += 1) {
-    const blockType = PlaceableBlocks[i];
-    GameState.inventory[blockType] = getInitialBlockCount(blockType);
-  }
+  // ブロックは初期インベントリに含めず、壊したブロックのみ所持可能にする
 
   GameState.inventorySlots = new Array(30).fill(null);
-  for (let i = 0; i < PlaceableBlocks.length; i += 1) {
-    GameState.inventorySlots[i] = { kind: ItemKind.BLOCK, blockType: PlaceableBlocks[i] };
-  }
+  // ブロックスロットは空で開始
 
   GameState.equipmentSlots = [
     { kind: ItemKind.TOOL, tool: ToolType.PICKAXE },
