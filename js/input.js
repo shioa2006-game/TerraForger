@@ -85,7 +85,9 @@ function mousePressed() {
       GameState.world[col][row] = BlockType.AIR;
       createBlockParticles(col, row, blockType);
       if (PlaceableBlocks.includes(blockType)) {
+        ensureInventorySlotForBlock(blockType);
         GameState.inventory[blockType] = (GameState.inventory[blockType] || 0) + 1;
+        updateSidebarUI();
       }
     }
   } else if (mouseButton === RIGHT) {
