@@ -123,10 +123,6 @@ function scatterOres(surfaceHeights) {
         GameState.world[col][row] = BlockType.COAL;
       } else if (depth > 16 && random() < 0.02) {
         GameState.world[col][row] = BlockType.IRON;
-      } else if (depth > 26 && random() < 0.012) {
-        GameState.world[col][row] = BlockType.GOLD;
-      } else if (depth > 34 && random() < 0.006) {
-        GameState.world[col][row] = BlockType.DIAMOND;
       }
     }
   }
