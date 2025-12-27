@@ -215,10 +215,7 @@ function isBlockBreakableWithTool(blockType, toolType) {
       blockType === BlockType.STONE ||
       blockType === BlockType.SAND ||
       blockType === BlockType.COAL ||
-      blockType === BlockType.IRON ||
-      blockType === BlockType.GOLD ||
-      blockType === BlockType.DIAMOND ||
-      blockType === BlockType.BRICK
+      blockType === BlockType.IRON
     );
   }
   if (toolType === ToolType.AXE) {

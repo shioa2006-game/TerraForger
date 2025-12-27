@@ -49,12 +49,9 @@ const BlockType = {
   LEAVES: 5,
   COAL: 6,
   IRON: 7,
-  GOLD: 8,
-  DIAMOND: 9,
-  SAND: 10,
-  BRICK: 11,
-  CHEST: 12,
-  WORKBENCH: 13,
+  SAND: 8,
+  CHEST: 9,
+  WORKBENCH: 10,
 };
 
 // ブロックの色定義
@@ -67,10 +64,7 @@ const BlockColors = {
   [BlockType.LEAVES]: { main: "#228B22", dark: "#186A18", light: "#32CD32" },
   [BlockType.COAL]: { main: "#505050", dark: "#303030", light: "#6A6A6A", ore: "#1A1A1A" },
   [BlockType.IRON]: { main: "#808080", dark: "#606060", light: "#A0A0A0", ore: "#D4A574" },
-  [BlockType.GOLD]: { main: "#808080", dark: "#606060", light: "#A0A0A0", ore: "#FFD700" },
-  [BlockType.DIAMOND]: { main: "#808080", dark: "#606060", light: "#A0A0A0", ore: "#00CED1" },
   [BlockType.SAND]: { main: "#F4D03F", dark: "#D4AC0D", light: "#F7DC6F" },
-  [BlockType.BRICK]: { main: "#B22222", dark: "#8B0000", light: "#CD5C5C" },
 };
 
 // ブロック名（UI表示用に将来利用）
@@ -81,7 +75,6 @@ const BlockNames = {
   [BlockType.WOOD]: "木",
   [BlockType.LEAVES]: "葉",
   [BlockType.SAND]: "砂",
-  [BlockType.BRICK]: "レンガ",
   [BlockType.CHEST]: "収納箱",
   [BlockType.WORKBENCH]: "作業机",
 };
@@ -92,7 +85,6 @@ const PlaceableBlocks = [
   BlockType.STONE,
   BlockType.WOOD,
   BlockType.SAND,
-  BlockType.BRICK,
   BlockType.LEAVES,
   BlockType.CHEST,
   BlockType.WORKBENCH,
