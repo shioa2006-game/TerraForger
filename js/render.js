@@ -8,6 +8,8 @@ const PLAYER_BODY_FRAMES = 2;
 const PLAYER_BODY_FRAME_INTERVAL = 10;
 const ITEM_FRAME_SIZE = 36;
 const ITEM_SPRITE_GAP = 6;
+const DROP_FRAME_SIZE = 36;
+const DROP_SPRITE_GAP = 6;
 const PLACEABLE_FRAME_SIZE = 36;
 const PLACEABLE_SPRITE_GAP = 6;
 function drawWorld() {
@@ -53,6 +55,36 @@ function drawPlaceables() {
       0,
       PLACEABLE_FRAME_SIZE,
       PLACEABLE_FRAME_SIZE
+    );
+  }
+}
+
+// ドロップアイテムを描画する
+function drawDrops() {
+  if (!GameState.dropSprite) {
+    return;
+  }
+
+  for (let i = 0; i < GameState.drops.length; i += 1) {
+    const drop = GameState.drops[i];
+    const itemDef = getItemDef(drop.itemId);
+    if (!itemDef) {
+      continue;
+    }
+    const drawLeft = drop.x - GameState.tileSize * 0.5;
+    const drawTop = drop.y - GameState.tileSize * 0.5;
+    const srcX = itemDef.iconIndex * (DROP_FRAME_SIZE + DROP_SPRITE_GAP);
+    imageMode(CORNER);
+    image(
+      GameState.dropSprite,
+      drawLeft,
+      drawTop,
+      GameState.tileSize,
+      GameState.tileSize,
+      srcX,
+      0,
+      DROP_FRAME_SIZE,
+      DROP_FRAME_SIZE
     );
   }
 }

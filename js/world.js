@@ -3,6 +3,7 @@ function initWorld() {
   noiseSeed(8);
   GameState.world = new Array(GameState.worldCols).fill(0).map(() => new Array(GameState.worldRows).fill(0));
   initPlaceables();
+  GameState.drops = [];
 
   const surfaceHeights = generateSurfaceHeights();
   buildGroundLayers(surfaceHeights);

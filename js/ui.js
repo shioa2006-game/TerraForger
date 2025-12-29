@@ -11,6 +11,7 @@ const uiElements = {
 };
 const ITEM_ICON_SIZE = 36;
 const ITEM_ICON_GAP = 6;
+const DROP_ICON_GAP = 6;
 const CHEST_COLUMNS = 10;
 const CHEST_ROWS = 6;
 const CHEST_SLOT_COUNT = CHEST_COLUMNS * CHEST_ROWS;
@@ -18,13 +19,13 @@ const CHEST_SLOT_COUNT = CHEST_COLUMNS * CHEST_ROWS;
 function initInventory() {
   GameState.inventory = {};
   // 収納箱と作業机を初期所持アイテムに追加
-  GameState.inventory[BlockType.CHEST] = 1;
-  GameState.inventory[BlockType.WORKBENCH] = 1;
+  GameState.inventory[ItemId.CHEST] = 1;
+  GameState.inventory[ItemId.WORKBENCH] = 1;
 
   GameState.inventorySlots = new Array(30).fill(null);
   // 収納箱と作業机のスロットを追加
-  GameState.inventorySlots[0] = { kind: ItemKind.BLOCK, blockType: BlockType.CHEST };
-  GameState.inventorySlots[1] = { kind: ItemKind.BLOCK, blockType: BlockType.WORKBENCH };
+  GameState.inventorySlots[0] = { kind: ItemKind.PLACEABLE, itemId: ItemId.CHEST };
+  GameState.inventorySlots[1] = { kind: ItemKind.PLACEABLE, itemId: ItemId.WORKBENCH };
 
   GameState.equipmentSlots = [
     { kind: ItemKind.TOOL, tool: ToolType.PICKAXE },
@@ -398,8 +399,8 @@ function updateEquipmentSlots() {
       continue;
     }
 
-    // 所持数が0のブロックはスロットから削除
-    if (item.kind === ItemKind.BLOCK && (GameState.inventory[item.blockType] || 0) <= 0) {
+    // 所持数が0のアイテムはスロットから削除
+    if (isStackableItem(item) && getItemCount(item.itemId) <= 0) {
       GameState.equipmentSlots[i] = null;
       entry.icon.style.background = "transparent";
       entry.icon.style.backgroundImage = "";
@@ -410,10 +411,10 @@ function updateEquipmentSlots() {
 
     entry.slot.setAttribute("draggable", "true");
 
-    if (item.kind === ItemKind.BLOCK) {
-      setBlockSlotIcon(entry.icon, item.blockType);
+    if (isStackableItem(item)) {
+      setItemSlotIcon(entry.icon, item.itemId);
       entry.icon.style.opacity = "1";
-      entry.count.textContent = String(GameState.inventory[item.blockType] || 0);
+      entry.count.textContent = String(getItemCount(item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
       const toolIndex = getToolSpriteIndex(item.tool);
       entry.icon.style.backgroundImage = "url('assets/items.png')";
@@ -438,8 +439,8 @@ function updateInventorySlots() {
       continue;
     }
 
-    // 所持数が0のブロックはスロットから削除
-    if (item.kind === ItemKind.BLOCK && (GameState.inventory[item.blockType] || 0) <= 0) {
+    // 所持数が0のアイテムはスロットから削除
+    if (isStackableItem(item) && getItemCount(item.itemId) <= 0) {
       GameState.inventorySlots[i] = null;
       entry.icon.style.background = "transparent";
       entry.icon.style.backgroundImage = "";
@@ -450,10 +451,10 @@ function updateInventorySlots() {
     }
 
     entry.slot.setAttribute("draggable", "true");
-    if (item.kind === ItemKind.BLOCK) {
-      setBlockSlotIcon(entry.icon, item.blockType);
+    if (isStackableItem(item)) {
+      setItemSlotIcon(entry.icon, item.itemId);
       entry.icon.style.opacity = "1";
-      entry.count.textContent = String(GameState.inventory[item.blockType] || 0);
+      entry.count.textContent = String(getItemCount(item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
       const toolIndex = getToolSpriteIndex(item.tool);
       entry.icon.style.backgroundImage = "url('assets/items.png')";
@@ -545,9 +546,9 @@ function renderChestSlots(placeable) {
       continue;
     }
     entry.icon.style.opacity = "1";
-    if (item.kind === ItemKind.BLOCK) {
-      setBlockSlotIcon(entry.icon, item.blockType);
-      entry.count.textContent = String(getChestBlockCount(placeable, item.blockType));
+    if (isStackableItem(item)) {
+      setItemSlotIcon(entry.icon, item.itemId);
+      entry.count.textContent = String(getChestItemCount(placeable, item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
       const toolIndex = getToolSpriteIndex(item.tool);
       entry.icon.style.backgroundImage = "url('assets/items.png')";
@@ -587,43 +588,43 @@ function getActiveChest() {
   return null;
 }
 
-// 収納箱内のブロック数を取得する
-function getChestBlockCount(placeable, blockType) {
+// 収納箱内のアイテム数を取得する
+function getChestItemCount(placeable, itemId) {
   if (!placeable.storageCounts) {
     return 0;
   }
-  return placeable.storageCounts[blockType] || 0;
+  return placeable.storageCounts[itemId] || 0;
 }
 
-// 収納箱内のブロック数を設定する
-function setChestBlockCount(placeable, blockType, count) {
+// 収納箱内のアイテム数を設定する
+function setChestItemCount(placeable, itemId, count) {
   if (!placeable.storageCounts) {
     placeable.storageCounts = {};
   }
   if (count <= 0) {
-    delete placeable.storageCounts[blockType];
+    delete placeable.storageCounts[itemId];
   } else {
-    placeable.storageCounts[blockType] = count;
+    placeable.storageCounts[itemId] = count;
   }
 }
 
-// 収納箱内でブロック種別のスロットを探す
-function findChestSlotByBlock(placeable, blockType) {
+// 収納箱内でアイテムIDのスロットを探す
+function findChestSlotByItem(placeable, itemId) {
   const storage = placeable.storage || [];
   for (let i = 0; i < storage.length; i += 1) {
     const item = storage[i];
-    if (item && item.kind === ItemKind.BLOCK && item.blockType === blockType) {
+    if (item && isStackableItem(item) && item.itemId === itemId) {
       return i;
     }
   }
   return -1;
 }
 
-// 所持アイテム内でブロック種別のスロットを探す
-function findInventorySlotByBlock(blockType) {
+// 所持アイテム内でアイテムIDのスロットを探す
+function findInventorySlotByItem(itemId) {
   for (let i = 0; i < GameState.inventorySlots.length; i += 1) {
     const item = GameState.inventorySlots[i];
-    if (item && item.kind === ItemKind.BLOCK && item.blockType === blockType) {
+    if (item && isStackableItem(item) && item.itemId === itemId) {
       return i;
     }
   }
@@ -642,22 +643,22 @@ function moveInventoryItemToChest(sourceIndex, targetIndex) {
   }
   const targetItem = chest.storage[targetIndex];
 
-  if (sourceItem.kind === ItemKind.BLOCK) {
-    const count = GameState.inventory[sourceItem.blockType] || 0;
+  if (isStackableItem(sourceItem)) {
+    const count = getItemCount(sourceItem.itemId);
     if (count <= 0) {
       return false;
     }
-    const existingIndex = findChestSlotByBlock(chest, sourceItem.blockType);
+    const existingIndex = findChestSlotByItem(chest, sourceItem.itemId);
     if (existingIndex !== -1 && existingIndex !== targetIndex) {
       return false;
     }
-    if (targetItem && (targetItem.kind !== ItemKind.BLOCK || targetItem.blockType !== sourceItem.blockType)) {
+    if (targetItem && (!isStackableItem(targetItem) || targetItem.itemId !== sourceItem.itemId)) {
       return false;
     }
-    chest.storage[targetIndex] = { kind: ItemKind.BLOCK, blockType: sourceItem.blockType };
-    const current = getChestBlockCount(chest, sourceItem.blockType);
-    setChestBlockCount(chest, sourceItem.blockType, current + count);
-    GameState.inventory[sourceItem.blockType] = 0;
+    chest.storage[targetIndex] = { kind: sourceItem.kind, itemId: sourceItem.itemId };
+    const current = getChestItemCount(chest, sourceItem.itemId);
+    setChestItemCount(chest, sourceItem.itemId, current + count);
+    addItemCount(sourceItem.itemId, -count);
     GameState.inventorySlots[sourceIndex] = null;
     return true;
   }
@@ -678,24 +679,24 @@ function moveChestItemToInventory(chest, sourceIndex, targetIndex) {
   }
   const targetItem = GameState.inventorySlots[targetIndex];
 
-  if (sourceItem.kind === ItemKind.BLOCK) {
-    const count = getChestBlockCount(chest, sourceItem.blockType);
+  if (isStackableItem(sourceItem)) {
+    const count = getChestItemCount(chest, sourceItem.itemId);
     if (count <= 0) {
       return false;
     }
-    const existingIndex = findInventorySlotByBlock(sourceItem.blockType);
+    const existingIndex = findInventorySlotByItem(sourceItem.itemId);
     if (existingIndex !== -1 && existingIndex !== targetIndex) {
       return false;
     }
-    if (targetItem && (targetItem.kind !== ItemKind.BLOCK || targetItem.blockType !== sourceItem.blockType)) {
+    if (targetItem && (!isStackableItem(targetItem) || targetItem.itemId !== sourceItem.itemId)) {
       return false;
     }
     if (!targetItem) {
-      GameState.inventorySlots[targetIndex] = { kind: ItemKind.BLOCK, blockType: sourceItem.blockType };
+      GameState.inventorySlots[targetIndex] = { kind: sourceItem.kind, itemId: sourceItem.itemId };
     }
-    GameState.inventory[sourceItem.blockType] = (GameState.inventory[sourceItem.blockType] || 0) + count;
+    addItemCount(sourceItem.itemId, count);
     chest.storage[sourceIndex] = null;
-    setChestBlockCount(chest, sourceItem.blockType, 0);
+    setChestItemCount(chest, sourceItem.itemId, 0);
     return true;
   }
 
@@ -723,25 +724,40 @@ function moveChestItemWithinChest(chest, sourceIndex, targetIndex) {
 }
 
 // 初期所持数を調整する
-function getInitialBlockCount(blockType) {
-  if (blockType === BlockType.CHEST || blockType === BlockType.WORKBENCH) {
+function getInitialItemCount(itemId) {
+  if (itemId === ItemId.CHEST || itemId === ItemId.WORKBENCH) {
     return 5;
   }
   return 30;
 }
 
-// ブロック用のアイコン表示を統一する
-function setBlockSlotIcon(icon, blockType) {
-  const placeableIndex = getPlaceableSpriteIndex(blockType);
-  if (placeableIndex >= 0) {
+// アイテム用のアイコン表示を統一する
+function setItemSlotIcon(icon, itemId) {
+  const itemDef = getItemDef(itemId);
+  if (!itemDef) {
+    icon.style.background = "transparent";
+    icon.style.backgroundImage = "";
+    icon.style.backgroundColor = "transparent";
+    return;
+  }
+
+  if (itemDef.kind === ItemKind.PLACEABLE) {
+    const placeableIndex = itemDef.iconIndex;
     icon.style.backgroundImage = "url('assets/placeables.png')";
     icon.style.backgroundPosition = `-${placeableIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
     icon.style.backgroundColor = "transparent";
     return;
   }
 
-  const colors = BlockColors[blockType];
+  if (itemDef.kind === ItemKind.BLOCK) {
+    const srcX = itemDef.iconIndex * (ITEM_ICON_SIZE + DROP_ICON_GAP);
+    icon.style.backgroundImage = "url('assets/drops.png')";
+    icon.style.backgroundPosition = `-${srcX}px 0px`;
+    icon.style.backgroundColor = "transparent";
+    return;
+  }
+
+  icon.style.background = "transparent";
   icon.style.backgroundImage = "";
-  icon.style.background = colors ? colors.main : "transparent";
-  icon.style.backgroundColor = colors ? colors.main : "transparent";
+  icon.style.backgroundColor = "transparent";
 }

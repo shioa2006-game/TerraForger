@@ -84,10 +84,9 @@ function mousePressed() {
       }
       GameState.world[col][row] = BlockType.AIR;
       createBlockParticles(col, row, blockType);
-      if (PlaceableBlocks.includes(blockType)) {
-        ensureInventorySlotForBlock(blockType);
-        GameState.inventory[blockType] = (GameState.inventory[blockType] || 0) + 1;
-        updateSidebarUI();
+      const blockDef = BlockDefs[blockType];
+      if (blockDef && blockDef.dropItemId) {
+        createDropItem(blockDef.dropItemId, col, row);
       }
     }
   } else if (mouseButton === RIGHT) {
@@ -96,16 +95,31 @@ function mousePressed() {
     }
     if (GameState.world[col][row] === BlockType.AIR && !isPlayerInside(col, row)) {
       const selectedItem = getSelectedEquipment();
-      if (selectedItem && selectedItem.kind === ItemKind.BLOCK) {
-        const blockType = selectedItem.blockType;
-        if (isPlaceableObject(blockType)) {
-          if (!isPlaceableOccupied(col, row) && GameState.inventory[blockType] > 0) {
-            addPlaceable(blockType, col, row);
-            GameState.inventory[blockType] -= 1;
+      if (selectedItem && (selectedItem.kind === ItemKind.BLOCK || selectedItem.kind === ItemKind.PLACEABLE)) {
+        const itemDef = getItemDef(selectedItem.itemId);
+        const count = getItemCount(selectedItem.itemId);
+        if (!itemDef || count <= 0) {
+          return;
+        }
+        if (selectedItem.kind === ItemKind.PLACEABLE) {
+          const placeableBlock = itemDef.placeableBlock;
+          if (!placeableBlock) {
+            return;
           }
-        } else if (!isPlaceableOccupied(col, row) && GameState.inventory[blockType] > 0) {
-          GameState.world[col][row] = blockType;
-          GameState.inventory[blockType] -= 1;
+          if (!isPlaceableOccupied(col, row)) {
+            addPlaceable(placeableBlock, col, row);
+            addItemCount(selectedItem.itemId, -1);
+          }
+          return;
+        }
+
+        const placeBlock = itemDef.placeBlock;
+        if (!placeBlock) {
+          return;
+        }
+        if (!isPlaceableOccupied(col, row)) {
+          GameState.world[col][row] = placeBlock;
+          addItemCount(selectedItem.itemId, -1);
         }
       }
     }
@@ -229,19 +243,22 @@ function isToolTargetAdjacent(col, row) {
   const playerCol = floor(GameState.player.x / GameState.tileSize);
   const playerRow = floor(GameState.player.y / GameState.tileSize);
   const dir = GameState.player.dir >= 0 ? 1 : -1;
+  // 中心点の真上は存在しない想定なので、真上2段目と斜め上を優先する
   const targetCols = [
     playerCol,
+    playerCol + dir,
     playerCol + dir,
     playerCol + dir,
     playerCol + dir,
     playerCol,
   ];
   const targetRows = [
-    playerRow - 1,
-    playerRow - 1,
+    playerRow + 1,
+    playerRow + 1,
     playerRow,
-    playerRow + 1,
-    playerRow + 1,
+    playerRow - 1,
+    playerRow - 2,
+    playerRow - 2,
   ];
   for (let i = 0; i < targetCols.length; i += 1) {
     if (targetCols[i] === col && targetRows[i] === row) {
@@ -278,15 +295,18 @@ function tryRetrievePlaceableWithHammer() {
   if (placeable.blockType === BlockType.CHEST && !isChestEmpty(placeable)) {
     return false;
   }
-  if (!ensureInventorySlotForBlock(placeable.blockType)) {
+  const placeableDef = PlaceableDefs[placeable.blockType];
+  if (!placeableDef) {
+    return false;
+  }
+  if (!ensureInventorySlotForItem(placeableDef.itemId)) {
     return false;
   }
   const removed = removePlaceableAt(placeable.col, placeable.row);
   if (!removed) {
     return false;
   }
-  GameState.inventory[removed.blockType] = (GameState.inventory[removed.blockType] || 0) + 1;
-  updateSidebarUI();
+  addItemCount(placeableDef.itemId, 1);
   return true;
 }
 
@@ -310,29 +330,46 @@ function isChestEmpty(placeable) {
   return true;
 }
 
-// 装備欄でブロック種別のスロットを探す
-function findEquipmentSlotByBlock(blockType) {
+// 装備欄でアイテムIDのスロットを探す
+function findEquipmentSlotByItem(itemId) {
   for (let i = 0; i < GameState.equipmentSlots.length; i += 1) {
     const item = GameState.equipmentSlots[i];
-    if (item && item.kind === ItemKind.BLOCK && item.blockType === blockType) {
+    if (item && isStackableItem(item) && item.itemId === itemId) {
       return i;
     }
   }
   return -1;
 }
 
-// ブロックスロットを所持アイテム内に確保する
-function ensureInventorySlotForBlock(blockType) {
-  if (findInventorySlotByBlock(blockType) !== -1) {
+// アイテムスロットを所持アイテム内に確保する
+function ensureInventorySlotForItem(itemId) {
+  if (findInventorySlotByItem(itemId) !== -1) {
     return true;
   }
-  if (findEquipmentSlotByBlock(blockType) !== -1) {
+  if (findEquipmentSlotByItem(itemId) !== -1) {
     return true;
   }
   const emptyIndex = findEmptyInventoryIndex();
   if (emptyIndex === -1) {
     return false;
   }
-  GameState.inventorySlots[emptyIndex] = { kind: ItemKind.BLOCK, blockType };
+  const itemDef = getItemDef(itemId);
+  if (!itemDef) {
+    return false;
+  }
+  GameState.inventorySlots[emptyIndex] = { kind: itemDef.kind, itemId };
   return true;
+}
+
+// ドロップアイテムを生成する
+function createDropItem(itemId, col, row) {
+  const x = col * GameState.tileSize + GameState.tileSize * 0.5;
+  const y = row * GameState.tileSize + GameState.tileSize * 0.5;
+  GameState.drops.push({
+    itemId,
+    x,
+    y,
+    vx: random(-0.6, 0.6),
+    vy: random(-2.0, -0.6),
+  });
 }

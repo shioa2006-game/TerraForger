@@ -7,11 +7,12 @@ const GameState = {
   player: null,
   cameraPos: { x: 0, y: 0 },
   keyState: { left: false, right: false, up: false },
-  reachRange: 3,
+  reachRange: 2,
   selectedEquipIndex: 0,
   equipmentSlots: [],
   inventorySlots: [],
   inventory: {},
+  drops: [],
   particles: [],
   backgroundStars: [],
   clouds: [],
@@ -20,6 +21,7 @@ const GameState = {
   timeOfDay: 0,
   playerSprite: null,
   itemSprite: null,
+  dropSprite: null,
   placeableSprite: null,
   pickaxeSwing: 0,
   pickaxeSwingDir: 1,
@@ -29,6 +31,21 @@ const GameState = {
 const ItemKind = {
   BLOCK: "block",
   TOOL: "tool",
+  PLACEABLE: "placeable",
+};
+
+// アイテムID
+const ItemId = {
+  DIRT: "dirt",
+  GRASS: "grass",
+  STONE: "stone",
+  WOOD: "wood",
+  BRANCH: "branch",
+  COAL: "coal",
+  IRON: "iron",
+  SAND: "sand",
+  CHEST: "chest",
+  WORKBENCH: "workbench",
 };
 
 // ツール種別
@@ -73,37 +90,73 @@ const BlockNames = {
   [BlockType.GRASS]: "草",
   [BlockType.STONE]: "石",
   [BlockType.WOOD]: "木",
-  [BlockType.LEAVES]: "葉",
+  [BlockType.LEAVES]: "枝",
   [BlockType.SAND]: "砂",
   [BlockType.CHEST]: "収納箱",
   [BlockType.WORKBENCH]: "作業机",
 };
 
-// 設置できるブロックの並び
-const PlaceableBlocks = [
-  BlockType.DIRT,
-  BlockType.STONE,
-  BlockType.WOOD,
-  BlockType.SAND,
-  BlockType.LEAVES,
-  BlockType.CHEST,
-  BlockType.WORKBENCH,
-];
+// ブロックのドロップ定義
+const BlockDefs = {
+  [BlockType.DIRT]: { dropItemId: ItemId.DIRT },
+  [BlockType.GRASS]: { dropItemId: ItemId.GRASS },
+  [BlockType.STONE]: { dropItemId: ItemId.STONE },
+  [BlockType.WOOD]: { dropItemId: ItemId.WOOD },
+  [BlockType.LEAVES]: { dropItemId: ItemId.BRANCH },
+  [BlockType.COAL]: { dropItemId: ItemId.COAL },
+  [BlockType.IRON]: { dropItemId: ItemId.IRON },
+  [BlockType.SAND]: { dropItemId: ItemId.SAND },
+};
 
-// 設置物スプライトの参照位置
-const PlaceableSpriteIndex = {
-  [BlockType.CHEST]: 4,
-  [BlockType.WORKBENCH]: 5,
+// 設置物の定義
+const PlaceableDefs = {
+  [BlockType.CHEST]: { itemId: ItemId.CHEST, spriteIndex: 4 },
+  [BlockType.WORKBENCH]: { itemId: ItemId.WORKBENCH, spriteIndex: 5 },
+};
+
+// アイテムの定義
+const ItemDefs = {
+  [ItemId.DIRT]: { kind: ItemKind.BLOCK, iconIndex: 0, placeBlock: BlockType.DIRT },
+  [ItemId.GRASS]: { kind: ItemKind.BLOCK, iconIndex: 1, placeBlock: BlockType.GRASS },
+  [ItemId.STONE]: { kind: ItemKind.BLOCK, iconIndex: 2, placeBlock: BlockType.STONE },
+  [ItemId.WOOD]: { kind: ItemKind.BLOCK, iconIndex: 3, placeBlock: BlockType.WOOD },
+  [ItemId.BRANCH]: { kind: ItemKind.BLOCK, iconIndex: 4, placeBlock: BlockType.LEAVES },
+  [ItemId.COAL]: { kind: ItemKind.BLOCK, iconIndex: 5, placeBlock: BlockType.COAL },
+  [ItemId.IRON]: { kind: ItemKind.BLOCK, iconIndex: 6, placeBlock: BlockType.IRON },
+  [ItemId.SAND]: { kind: ItemKind.BLOCK, iconIndex: 7, placeBlock: BlockType.SAND },
+  [ItemId.CHEST]: { kind: ItemKind.PLACEABLE, iconIndex: 4, placeableBlock: BlockType.CHEST },
+  [ItemId.WORKBENCH]: { kind: ItemKind.PLACEABLE, iconIndex: 5, placeableBlock: BlockType.WORKBENCH },
 };
 
 // 設置物スプライトの位置を返す（未対応は-1）
 function getPlaceableSpriteIndex(blockType) {
-  return PlaceableSpriteIndex[blockType] ?? -1;
+  return PlaceableDefs[blockType]?.spriteIndex ?? -1;
 }
 
 // オブジェクト扱いの設置物かどうか判定する
 function isPlaceableObject(blockType) {
   return getPlaceableSpriteIndex(blockType) >= 0;
+}
+
+// アイテム定義を取得する
+function getItemDef(itemId) {
+  return ItemDefs[itemId] || null;
+}
+
+// スタック可能アイテムか判定する
+function isStackableItem(item) {
+  return item && (item.kind === ItemKind.BLOCK || item.kind === ItemKind.PLACEABLE);
+}
+
+// 所持数を取得する
+function getItemCount(itemId) {
+  return GameState.inventory[itemId] || 0;
+}
+
+// 所持数を加算する
+function addItemCount(itemId, amount) {
+  const next = (GameState.inventory[itemId] || 0) + amount;
+  GameState.inventory[itemId] = max(0, next);
 }
 
 function getSelectedEquipment() {

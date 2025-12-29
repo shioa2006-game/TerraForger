@@ -2,6 +2,7 @@
 function preload() {
   GameState.playerSprite = loadImage("assets/player.png");
   GameState.itemSprite = loadImage("assets/items.png");
+  GameState.dropSprite = loadImage("assets/drops.png");
   GameState.placeableSprite = loadImage("assets/placeables.png");
 }
 
@@ -24,6 +25,7 @@ function draw() {
   drawBackground();
   updatePlayer();
   updateParticles();
+  updateDrops();
   updatePickaxeSwing();
   updateCamera();
 
@@ -31,6 +33,7 @@ function draw() {
   translate(-GameState.cameraPos.x, -GameState.cameraPos.y);
   drawWorld();
   drawPlaceables();
+  drawDrops();
   drawPlayer();
   drawParticles();
   drawBlockCursor();
@@ -78,4 +81,64 @@ function screenToWorld(screenX, screenY) {
     x: screenX + GameState.cameraPos.x,
     y: screenY + GameState.cameraPos.y,
   };
+}
+
+// ドロップアイテムの更新
+function updateDrops() {
+  const gravity = 0.28;
+  const maxFall = 6;
+  const dropSize = GameState.tileSize * 0.6;
+
+  for (let i = GameState.drops.length - 1; i >= 0; i -= 1) {
+    const drop = GameState.drops[i];
+    drop.vy = min(drop.vy + gravity, maxFall);
+    drop.x += drop.vx;
+    drop.y += drop.vy;
+    drop.vx *= 0.92;
+    if (abs(drop.vx) < 0.02) {
+      drop.vx = 0;
+    }
+
+    const col = floor(drop.x / GameState.tileSize);
+    const row = floor((drop.y + dropSize * 0.5) / GameState.tileSize);
+    if (isSolid(col, row)) {
+      drop.y = row * GameState.tileSize - dropSize * 0.5;
+      drop.vy = 0;
+    }
+
+    if (isDropTouchingPlayer(drop, dropSize)) {
+      if (tryPickupDrop(drop.itemId)) {
+        GameState.drops.splice(i, 1);
+      }
+    }
+  }
+}
+
+// ドロップとプレイヤーが接触しているか判定する
+function isDropTouchingPlayer(drop, size) {
+  const half = size * 0.5;
+  const dropLeft = drop.x - half;
+  const dropRight = drop.x + half;
+  const dropTop = drop.y - half;
+  const dropBottom = drop.y + half;
+  const playerLeft = GameState.player.x - GameState.player.w * 0.5;
+  const playerRight = GameState.player.x + GameState.player.w * 0.5;
+  const playerTop = GameState.player.y - GameState.player.h * 0.5;
+  const playerBottom = GameState.player.y + GameState.player.h * 0.5;
+
+  return (
+    dropLeft < playerRight &&
+    dropRight > playerLeft &&
+    dropTop < playerBottom &&
+    dropBottom > playerTop
+  );
+}
+
+// ドロップを所持品へ追加する
+function tryPickupDrop(itemId) {
+  if (!ensureInventorySlotForItem(itemId)) {
+    return false;
+  }
+  addItemCount(itemId, 1);
+  return true;
 }
