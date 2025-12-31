@@ -13,14 +13,20 @@ const DROP_SPRITE_GAP = 6;
 const PLACEABLE_FRAME_SIZE = 36;
 const PLACEABLE_SPRITE_GAP = 6;
 function drawWorld() {
-  const startCol = max(0, floor(GameState.cameraPos.x / GameState.tileSize) - 1);
-  const endCol = min(GameState.worldCols - 1, floor((GameState.cameraPos.x + width) / GameState.tileSize) + 1);
-  const startRow = max(0, floor(GameState.cameraPos.y / GameState.tileSize) - 1);
-  const endRow = min(GameState.worldRows - 1, floor((GameState.cameraPos.y + height) / GameState.tileSize) + 1);
+  const startCol = max(0, floor(GameState.camera.pos.x / GameState.worldState.tileSize) - RENDER_VIEW_MARGIN);
+  const endCol = min(
+    GameState.worldState.worldCols - 1,
+    floor((GameState.camera.pos.x + width) / GameState.worldState.tileSize) + RENDER_VIEW_MARGIN
+  );
+  const startRow = max(0, floor(GameState.camera.pos.y / GameState.worldState.tileSize) - RENDER_VIEW_MARGIN);
+  const endRow = min(
+    GameState.worldState.worldRows - 1,
+    floor((GameState.camera.pos.y + height) / GameState.worldState.tileSize) + RENDER_VIEW_MARGIN
+  );
 
   for (let col = startCol; col <= endCol; col += 1) {
     for (let row = startRow; row <= endRow; row += 1) {
-      const block = GameState.world[col][row];
+      const block = GameState.worldState.world[col][row];
       if (block === BlockType.AIR) {
         continue;
       }
@@ -35,8 +41,8 @@ function drawWoodWalls() {
     return;
   }
 
-  for (let i = 0; i < GameState.backgroundPlaceables.length; i += 1) {
-    const placeable = GameState.backgroundPlaceables[i];
+  for (let i = 0; i < GameState.worldObjects.backgroundPlaceables.length; i += 1) {
+    const placeable = GameState.worldObjects.backgroundPlaceables[i];
     drawPlaceable(placeable);
   }
 }
@@ -47,8 +53,8 @@ function drawPlaceables() {
     return;
   }
 
-  for (let i = 0; i < GameState.placeables.length; i += 1) {
-    const placeable = GameState.placeables[i];
+  for (let i = 0; i < GameState.worldObjects.placeables.length; i += 1) {
+    const placeable = GameState.worldObjects.placeables[i];
     drawPlaceable(placeable);
   }
 }
@@ -64,16 +70,16 @@ function drawPlaceable(placeable) {
     const sprite = def.sprites[i];
     const drawCol = placeable.col + sprite.dx;
     const drawRow = placeable.row + sprite.dy;
-    const x = drawCol * GameState.tileSize;
-    const y = drawRow * GameState.tileSize;
+    const x = drawCol * GameState.worldState.tileSize;
+    const y = drawRow * GameState.worldState.tileSize;
     const srcX = sprite.index * stride;
     imageMode(CORNER);
     image(
       GameState.placeableSprite,
       x,
       y,
-      GameState.tileSize,
-      GameState.tileSize,
+      GameState.worldState.tileSize,
+      GameState.worldState.tileSize,
       srcX,
       0,
       PLACEABLE_FRAME_SIZE,
@@ -88,22 +94,22 @@ function drawDrops() {
     return;
   }
 
-  for (let i = 0; i < GameState.drops.length; i += 1) {
-    const drop = GameState.drops[i];
+  for (let i = 0; i < GameState.effects.drops.length; i += 1) {
+    const drop = GameState.effects.drops[i];
     const itemDef = getItemDef(drop.itemId);
     if (!itemDef) {
       continue;
     }
-    const drawLeft = drop.x - GameState.tileSize * 0.5;
-    const drawTop = drop.y - GameState.tileSize * 0.5;
+    const drawLeft = drop.x - GameState.worldState.tileSize * 0.5;
+    const drawTop = drop.y - GameState.worldState.tileSize * 0.5;
     const srcX = itemDef.iconIndex * (DROP_FRAME_SIZE + DROP_SPRITE_GAP);
     imageMode(CORNER);
     image(
       GameState.dropSprite,
       drawLeft,
       drawTop,
-      GameState.tileSize,
-      GameState.tileSize,
+      GameState.worldState.tileSize,
+      GameState.worldState.tileSize,
       srcX,
       0,
       DROP_FRAME_SIZE,
@@ -119,31 +125,41 @@ function drawBlock(col, row, blockType) {
     return;
   }
 
-  const x = col * GameState.tileSize;
-  const y = row * GameState.tileSize;
+  const x = col * GameState.worldState.tileSize;
+  const y = row * GameState.worldState.tileSize;
 
   noStroke();
   fill(colors.main);
-  rect(x, y, GameState.tileSize, GameState.tileSize);
+  rect(x, y, GameState.worldState.tileSize, GameState.worldState.tileSize);
 
   fill(colors.light);
-  rect(x, y, GameState.tileSize, 2);
-  rect(x, y, 2, GameState.tileSize);
+  rect(x, y, GameState.worldState.tileSize, BLOCK_LIGHT_EDGE);
+  rect(x, y, BLOCK_LIGHT_EDGE, GameState.worldState.tileSize);
 
   fill(colors.dark);
-  rect(x, y + GameState.tileSize - 2, GameState.tileSize, 2);
-  rect(x + GameState.tileSize - 2, y, 2, GameState.tileSize);
+  rect(x, y + GameState.worldState.tileSize - BLOCK_LIGHT_EDGE, GameState.worldState.tileSize, BLOCK_LIGHT_EDGE);
+  rect(x + GameState.worldState.tileSize - BLOCK_LIGHT_EDGE, y, BLOCK_LIGHT_EDGE, GameState.worldState.tileSize);
 
   if (blockType === BlockType.GRASS && colors.top) {
     fill(colors.top);
-    rect(x, y, GameState.tileSize, 4);
+    rect(x, y, GameState.worldState.tileSize, BLOCK_TOP_EDGE);
   }
 
   if (colors.ore) {
     fill(colors.ore);
-    const seed = col * 1000 + row;
-    rect(x + (seed % 7) + 2, y + ((seed * 3) % 7) + 2, 4, 4);
-    rect(x + ((seed * 2) % 8) + 4, y + ((seed * 5) % 8) + 6, 3, 3);
+    const seed = col * ORE_SEED_MULTIPLIER + row;
+    rect(
+      x + (seed % ORE_OFFSET_A) + ORE_OFFSET_B,
+      y + ((seed * ORE_OFFSET_C) % ORE_OFFSET_A) + ORE_OFFSET_B,
+      ORE_SIZE_LARGE,
+      ORE_SIZE_LARGE
+    );
+    rect(
+      x + ((seed * 2) % ORE_OFFSET_D) + ORE_OFFSET_E,
+      y + ((seed * ORE_OFFSET_F) % ORE_OFFSET_D) + ORE_OFFSET_G,
+      ORE_SIZE_MEDIUM,
+      ORE_SIZE_MEDIUM
+    );
   }
 }
 
@@ -153,22 +169,22 @@ function drawPlayer() {
   }
 
   const sprite = GameState.playerSprite;
-  const dir = GameState.player.dir >= 0 ? "right" : "left";
-  const headIndex = 0;
+  const dir = GameState.playerState.entity.dir >= 0 ? PLAYER_DIR_RIGHT : PLAYER_DIR_LEFT;
+  const headIndex = PLAYER_HEAD_INDEX;
   const bodyIndex = getBodyFrameIndex();
   const headSx = headIndex * (PLAYER_FRAME_SIZE + PLAYER_SPRITE_GAP);
   const bodySx = bodyIndex * (PLAYER_FRAME_SIZE + PLAYER_SPRITE_GAP);
   const headSy = PLAYER_SHEET_ROW * PLAYER_FRAME_SIZE;
   const bodySy = PLAYER_SHEET_ROW * PLAYER_FRAME_SIZE;
 
-  const drawLeft = GameState.player.x - PLAYER_FRAME_SIZE * 0.5;
+  const drawLeft = GameState.playerState.entity.x - PLAYER_FRAME_SIZE * 0.5;
   const visualHeight = PLAYER_HEAD_HEIGHT + PLAYER_BODY_HEIGHT;
-  const drawTop = GameState.player.y + GameState.player.h * 0.5 - visualHeight;
+  const drawTop = GameState.playerState.entity.y + GameState.playerState.entity.h * 0.5 - visualHeight;
 
   imageMode(CORNER);
   push();
-  if (dir === "left") {
-    translate(GameState.player.x * 2, 0);
+  if (dir === PLAYER_DIR_LEFT) {
+    translate(GameState.playerState.entity.x * PLAYER_FLIP_TRANSLATE_MULTIPLIER, 0);
     scale(-1, 1);
   }
   image(
@@ -199,10 +215,10 @@ function drawPlayer() {
 
 // 移動中は体フレームを交互に切り替える
 function getBodyFrameIndex() {
-  if (abs(GameState.player.vx) > 0.1) {
+  if (abs(GameState.playerState.entity.vx) > PLAYER_WALK_SPEED_THRESHOLD) {
     return 1 + (floor(frameCount / PLAYER_BODY_FRAME_INTERVAL) % PLAYER_BODY_FRAMES);
   }
-  return 2;
+  return PLAYER_IDLE_FRAME;
 }
 
 // プレイヤーの上に装備を重ねる
@@ -213,24 +229,24 @@ function drawToolOverlay(playerDrawLeft, playerDrawTop, dir) {
   }
 
   const toolIndex = getToolSpriteIndex(selectedItem.tool);
-  const anchorX = playerDrawLeft + 9;
-  const anchorY = playerDrawTop + 54;
+  const anchorX = playerDrawLeft + TOOL_ANCHOR_X;
+  const anchorY = playerDrawTop + TOOL_ANCHOR_Y;
   const srcX = toolIndex * (ITEM_FRAME_SIZE + ITEM_SPRITE_GAP);
   const srcY = 0;
 
   push();
   translate(anchorX, anchorY);
-  const baseAngle = PI / 4;
-  const swing = radians(GameState.pickaxeSwing);
-  if (dir === "left") {
+  const baseAngle = TOOL_BASE_ANGLE;
+  const swing = radians(GameState.playerState.pickaxeSwing);
+  if (dir === PLAYER_DIR_LEFT) {
     scale(-1, 1);
   }
   rotate(baseAngle + swing);
   imageMode(CORNER);
   image(
     GameState.itemSprite,
-    -18,
-    -36,
+    TOOL_DRAW_OFFSET_X,
+    TOOL_DRAW_OFFSET_Y,
     ITEM_FRAME_SIZE,
     ITEM_FRAME_SIZE,
     srcX,
@@ -241,42 +257,29 @@ function drawToolOverlay(playerDrawLeft, playerDrawTop, dir) {
   pop();
 }
 
-function getToolSpriteIndex(toolType) {
-  if (toolType === ToolType.PICKAXE) {
-    return 0;
-  }
-  if (toolType === ToolType.AXE) {
-    return 1;
-  }
-  if (toolType === ToolType.HAMMER) {
-    return 2;
-  }
-  return 3;
-}
-
 function drawBlockCursor() {
   const target = screenToWorld(mouseX, mouseY);
-  const col = floor(target.x / GameState.tileSize);
-  const row = floor(target.y / GameState.tileSize);
+  const col = floor(target.x / GameState.worldState.tileSize);
+  const row = floor(target.y / GameState.worldState.tileSize);
 
   if (!isInsideWorld(col, row)) {
     return;
   }
 
   const distance = dist(
-    GameState.player.x,
-    GameState.player.y,
-    col * GameState.tileSize + GameState.tileSize * 0.5,
-    row * GameState.tileSize + GameState.tileSize * 0.5
+    GameState.playerState.entity.x,
+    GameState.playerState.entity.y,
+    col * GameState.worldState.tileSize + GameState.worldState.tileSize * 0.5,
+    row * GameState.worldState.tileSize + GameState.worldState.tileSize * 0.5
   );
-  if (distance > GameState.reachRange * GameState.tileSize) {
+  if (distance > GameState.playerState.reachRange * GameState.worldState.tileSize) {
     return;
   }
 
   noFill();
-  const pulse = sin(frameCount * 0.12) * 40 + 180;
+  const pulse = sin(frameCount * CURSOR_PULSE_SPEED) * CURSOR_PULSE_SCALE + CURSOR_PULSE_BASE;
   stroke(230, 200, 90, pulse);
-  strokeWeight(2);
-  rect(col * GameState.tileSize, row * GameState.tileSize, GameState.tileSize, GameState.tileSize);
-  strokeWeight(1);
+  strokeWeight(CURSOR_STROKE_WEIGHT);
+  rect(col * GameState.worldState.tileSize, row * GameState.worldState.tileSize, GameState.worldState.tileSize, GameState.worldState.tileSize);
+  strokeWeight(CURSOR_STROKE_WEIGHT_DEFAULT);
 }

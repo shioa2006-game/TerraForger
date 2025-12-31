@@ -7,7 +7,7 @@ function preload() {
 }
 
 function setup() {
-  const canvas = createCanvas(960, 540);
+  const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   canvas.parent("game");
   canvas.elt.oncontextmenu = () => false;
   pixelDensity(1);
@@ -21,7 +21,7 @@ function setup() {
 }
 
 function draw() {
-  GameState.timeOfDay = (GameState.timeOfDay + 0.00012) % 1;
+  GameState.environment.timeOfDay = (GameState.environment.timeOfDay + TIME_OF_DAY_SPEED) % 1;
   drawBackground();
   updatePlayer();
   updateParticles();
@@ -30,7 +30,7 @@ function draw() {
   updateCamera();
 
   push();
-  translate(-GameState.cameraPos.x, -GameState.cameraPos.y);
+  translate(-GameState.camera.pos.x, -GameState.camera.pos.y);
   drawWoodWalls();
   drawPlaceables();
   drawWorld();
@@ -48,68 +48,57 @@ function updatePickaxeSwing() {
   const selectedItem = getSelectedEquipment();
   const shouldSwing = selectedItem && selectedItem.kind === ItemKind.TOOL;
   if (shouldSwing && mouseIsPressed && mouseButton === LEFT) {
-    const speed = 2.4;
-    const limit = 30;
-    GameState.pickaxeSwing += speed * GameState.pickaxeSwingDir;
-    if (GameState.pickaxeSwing > limit) {
-      GameState.pickaxeSwing = limit;
-      GameState.pickaxeSwingDir = -1;
-    } else if (GameState.pickaxeSwing < -limit) {
-      GameState.pickaxeSwing = -limit;
-      GameState.pickaxeSwingDir = 1;
+    GameState.playerState.pickaxeSwing += PICKAXE_SWING_SPEED * GameState.playerState.pickaxeSwingDir;
+    if (GameState.playerState.pickaxeSwing > PICKAXE_SWING_LIMIT) {
+      GameState.playerState.pickaxeSwing = PICKAXE_SWING_LIMIT;
+      GameState.playerState.pickaxeSwingDir = -1;
+    } else if (GameState.playerState.pickaxeSwing < -PICKAXE_SWING_LIMIT) {
+      GameState.playerState.pickaxeSwing = -PICKAXE_SWING_LIMIT;
+      GameState.playerState.pickaxeSwingDir = 1;
     }
   } else {
-    GameState.pickaxeSwing = 0;
-    GameState.pickaxeSwingDir = 1;
+    GameState.playerState.pickaxeSwing = 0;
+    GameState.playerState.pickaxeSwingDir = 1;
   }
 }
 
 function updateCamera() {
-  GameState.cameraPos.x = constrain(
-    GameState.player.x - width * 0.5,
+  GameState.camera.pos.x = constrain(
+    GameState.playerState.entity.x - width * 0.5,
     0,
-    GameState.worldCols * GameState.tileSize - width
+    GameState.worldState.worldCols * GameState.worldState.tileSize - width
   );
-  GameState.cameraPos.y = constrain(
-    GameState.player.y - height * 0.5,
+  GameState.camera.pos.y = constrain(
+    GameState.playerState.entity.y - height * 0.5,
     0,
-    GameState.worldRows * GameState.tileSize - height
+    GameState.worldState.worldRows * GameState.worldState.tileSize - height
   );
-}
-
-function screenToWorld(screenX, screenY) {
-  return {
-    x: screenX + GameState.cameraPos.x,
-    y: screenY + GameState.cameraPos.y,
-  };
 }
 
 // ドロップアイテムの更新
 function updateDrops() {
-  const gravity = 0.28;
-  const maxFall = 6;
-  const dropSize = GameState.tileSize * 0.6;
+  const dropSize = GameState.worldState.tileSize * DROP_SIZE_SCALE;
 
-  for (let i = GameState.drops.length - 1; i >= 0; i -= 1) {
-    const drop = GameState.drops[i];
-    drop.vy = min(drop.vy + gravity, maxFall);
+  for (let i = GameState.effects.drops.length - 1; i >= 0; i -= 1) {
+    const drop = GameState.effects.drops[i];
+    drop.vy = min(drop.vy + DROP_GRAVITY, DROP_MAX_FALL);
     drop.x += drop.vx;
     drop.y += drop.vy;
-    drop.vx *= 0.92;
-    if (abs(drop.vx) < 0.02) {
+    drop.vx *= DROP_FRICTION;
+    if (abs(drop.vx) < DROP_STOP_THRESHOLD) {
       drop.vx = 0;
     }
 
-    const col = floor(drop.x / GameState.tileSize);
-    const row = floor((drop.y + dropSize * 0.5) / GameState.tileSize);
+    const col = floor(drop.x / GameState.worldState.tileSize);
+    const row = floor((drop.y + dropSize * 0.5) / GameState.worldState.tileSize);
     if (isSolid(col, row)) {
-      drop.y = row * GameState.tileSize - dropSize * 0.5;
+      drop.y = row * GameState.worldState.tileSize - dropSize * 0.5;
       drop.vy = 0;
     }
 
     if (isDropTouchingPlayer(drop, dropSize)) {
       if (tryPickupDrop(drop.itemId)) {
-        GameState.drops.splice(i, 1);
+        GameState.effects.drops.splice(i, 1);
       }
     }
   }
@@ -122,10 +111,10 @@ function isDropTouchingPlayer(drop, size) {
   const dropRight = drop.x + half;
   const dropTop = drop.y - half;
   const dropBottom = drop.y + half;
-  const playerLeft = GameState.player.x - GameState.player.w * 0.5;
-  const playerRight = GameState.player.x + GameState.player.w * 0.5;
-  const playerTop = GameState.player.y - GameState.player.h * 0.5;
-  const playerBottom = GameState.player.y + GameState.player.h * 0.5;
+  const playerLeft = GameState.playerState.entity.x - GameState.playerState.entity.w * 0.5;
+  const playerRight = GameState.playerState.entity.x + GameState.playerState.entity.w * 0.5;
+  const playerTop = GameState.playerState.entity.y - GameState.playerState.entity.h * 0.5;
+  const playerBottom = GameState.playerState.entity.y + GameState.playerState.entity.h * 0.5;
 
   return (
     dropLeft < playerRight &&

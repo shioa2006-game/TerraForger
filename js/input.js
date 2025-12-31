@@ -1,46 +1,79 @@
 ﻿// 入力処理
 function keyPressed() {
+  handleMovementKeyDown();
+  handleEquipmentKeyDown();
+  handleResetKeyDown();
+  handleOverlayKeyDown();
+  handleInteractKeyDown();
+}
+
+function keyReleased() {
+  handleMovementKeyUp();
+}
+
+// 移動キーの押下を処理する
+function handleMovementKeyDown() {
   if (key === "a" || key === "A" || keyCode === LEFT_ARROW) {
-    GameState.keyState.left = true;
+    GameState.playerState.keyState.left = true;
   }
   if (key === "d" || key === "D" || keyCode === RIGHT_ARROW) {
-    GameState.keyState.right = true;
+    GameState.playerState.keyState.right = true;
   }
   if (key === "w" || key === "W" || key === " " || keyCode === UP_ARROW) {
-    GameState.keyState.up = true;
+    GameState.playerState.keyState.up = true;
   }
-  if (key >= "1" && key <= "5") {
-    const index = parseInt(key, 10) - 1;
-    if (index >= 0 && index < 5) {
-      GameState.selectedEquipIndex = index;
-    }
+}
+
+// 移動キーの解放を処理する
+function handleMovementKeyUp() {
+  if (key === "a" || key === "A" || keyCode === LEFT_ARROW) {
+    GameState.playerState.keyState.left = false;
   }
+  if (key === "d" || key === "D" || keyCode === RIGHT_ARROW) {
+    GameState.playerState.keyState.right = false;
+  }
+  if (key === "w" || key === "W" || key === " " || keyCode === UP_ARROW) {
+    GameState.playerState.keyState.up = false;
+  }
+}
+
+// 装備スロットの選択キーを処理する
+function handleEquipmentKeyDown() {
+  const keyIndex = parseInt(key, 10) - 1;
+  if (!Number.isNaN(keyIndex) && keyIndex >= 0 && keyIndex < EQUIPMENT_SLOT_COUNT) {
+    GameState.playerState.selectedEquipIndex = keyIndex;
+  }
+}
+
+// Rキーでワールドを再生成する
+function handleResetKeyDown() {
   if (key === "r" || key === "R") {
-    noiseSeed(Date.now());
-    initWorld();
-    initPlayer();
-    initInventory();
-    initBackground();
-    GameState.particles = [];
+    resetWorldState();
   }
+}
+
+// すべてのオーバーレイを閉じる
+function handleOverlayKeyDown() {
   if (keyCode === ESCAPE) {
     closeAllOverlays();
   }
+}
+
+// インタラクトキーを処理する
+function handleInteractKeyDown() {
   if (key === "e" || key === "E") {
     tryToggleInteract();
   }
 }
 
-function keyReleased() {
-  if (key === "a" || key === "A" || keyCode === LEFT_ARROW) {
-    GameState.keyState.left = false;
-  }
-  if (key === "d" || key === "D" || keyCode === RIGHT_ARROW) {
-    GameState.keyState.right = false;
-  }
-  if (key === "w" || key === "W" || key === " " || keyCode === UP_ARROW) {
-    GameState.keyState.up = false;
-  }
+// 再生成時の初期化をまとめる
+function resetWorldState() {
+  noiseSeed(Date.now());
+  initWorld();
+  initPlayer();
+  initInventory();
+  initBackground();
+  GameState.effects.particles = [];
 }
 
 function mousePressed() {
@@ -48,437 +81,131 @@ function mousePressed() {
     return;
   }
 
-  const target = screenToWorld(mouseX, mouseY);
-  const col = floor(target.x / GameState.tileSize);
-  const row = floor(target.y / GameState.tileSize);
-
-  if (!isInsideWorld(col, row)) {
+  const target = getTargetTileFromMouse();
+  if (!target) {
     return;
   }
-
-  const distance = dist(
-    GameState.player.x,
-    GameState.player.y,
-    col * GameState.tileSize + GameState.tileSize * 0.5,
-    row * GameState.tileSize + GameState.tileSize * 0.5
-  );
-  if (distance > GameState.reachRange * GameState.tileSize) {
+  if (!isTileWithinReach(target.col, target.row)) {
     return;
   }
 
   if (mouseButton === LEFT) {
-    if (tryInteractWithPlaceable()) {
-      return;
-    }
-    if (tryCraftAtWorkbench()) {
-      return;
-    }
-    if (GameState.world[col][row] !== BlockType.AIR) {
-      const blockType = GameState.world[col][row];
-      const toolType = getSelectedToolType();
-      if (!toolType || !isBlockBreakableWithTool(blockType, toolType)) {
-        return;
-      }
-      if (!isToolTargetAdjacent(col, row)) {
-        return;
-      }
-      GameState.world[col][row] = BlockType.AIR;
-      createBlockParticles(col, row, blockType);
-      const blockDef = BlockDefs[blockType];
-      if (blockDef && blockDef.dropItemId) {
-        createDropItem(blockDef.dropItemId, col, row);
-      }
-    }
+    handleLeftClick(target.col, target.row);
   } else if (mouseButton === RIGHT) {
-    if (tryRetrievePlaceableWithHammer(col, row)) {
-      return;
-    }
-    if (GameState.world[col][row] === BlockType.AIR) {
-      const selectedItem = getSelectedEquipment();
-      if (selectedItem && (selectedItem.kind === ItemKind.BLOCK || selectedItem.kind === ItemKind.PLACEABLE)) {
-        const itemDef = getItemDef(selectedItem.itemId);
-        const count = getItemCount(selectedItem.itemId);
-        if (!itemDef || count <= 0) {
-          return;
-        }
-        if (selectedItem.kind === ItemKind.PLACEABLE) {
-          const placeableBlock = itemDef.placeableBlock;
-          if (!placeableBlock) {
-            return;
-          }
-          if (tryPlacePlaceable(placeableBlock, col, row)) {
-            addItemCount(selectedItem.itemId, -1);
-          }
-          return;
-        }
-
-        const placeBlock = itemDef.placeBlock;
-        if (!placeBlock) {
-          return;
-        }
-        if (isPlayerInside(col, row)) {
-          return;
-        }
-        if (!isPlaceableOccupied(col, row)) {
-          GameState.world[col][row] = placeBlock;
-          addItemCount(selectedItem.itemId, -1);
-        }
-      }
-    }
+    handleRightClick(target.col, target.row);
   }
+}
+
+// マウス位置からワールド座標のタイルを取得する
+function getTargetTileFromMouse() {
+  const target = screenToWorld(mouseX, mouseY);
+  const col = floor(target.x / GameState.worldState.tileSize);
+  const row = floor(target.y / GameState.worldState.tileSize);
+  if (!isInsideWorld(col, row)) {
+    return null;
+  }
+  return { col, row };
+}
+
+// タイルがリーチ範囲内か判定する
+function isTileWithinReach(col, row) {
+  const distance = dist(
+    GameState.playerState.entity.x,
+    GameState.playerState.entity.y,
+    col * GameState.worldState.tileSize + GameState.worldState.tileSize * REACH_DISTANCE_SCALE,
+    row * GameState.worldState.tileSize + GameState.worldState.tileSize * REACH_DISTANCE_SCALE
+  );
+  return distance <= GameState.playerState.reachRange * GameState.worldState.tileSize;
+}
+
+// 左クリック処理をまとめる
+function handleLeftClick(col, row) {
+  if (tryInteractWithPlaceable()) {
+    return true;
+  }
+  if (tryCraftAtWorkbench()) {
+    return true;
+  }
+  return tryBreakBlock(col, row);
+}
+
+// 右クリック処理をまとめる
+function handleRightClick(col, row) {
+  if (tryRetrievePlaceableWithHammer(col, row)) {
+    return true;
+  }
+  return tryPlaceSelectedItem(col, row);
+}
+
+// ブロック破壊の判定と実行を行う
+function tryBreakBlock(col, row) {
+  if (GameState.worldState.world[col][row] === BlockType.AIR) {
+    return false;
+  }
+  const blockType = GameState.worldState.world[col][row];
+  const toolType = getSelectedToolType();
+  if (!toolType || !isBlockBreakableWithTool(blockType, toolType)) {
+    return false;
+  }
+  if (!isToolTargetAdjacent(col, row)) {
+    return false;
+  }
+  GameState.worldState.world[col][row] = BlockType.AIR;
+  createBlockParticles(col, row, blockType);
+  const blockDef = BlockDefs[blockType];
+  if (blockDef && blockDef.dropItemId) {
+    createDropItem(blockDef.dropItemId, col, row);
+  }
+  return true;
+}
+
+// 装備中アイテムの設置処理を行う
+function tryPlaceSelectedItem(col, row) {
+  if (GameState.worldState.world[col][row] !== BlockType.AIR) {
+    return false;
+  }
+  const selectedItem = getSelectedEquipment();
+  if (!selectedItem || (selectedItem.kind !== ItemKind.BLOCK && selectedItem.kind !== ItemKind.PLACEABLE)) {
+    return false;
+  }
+  const itemDef = getItemDef(selectedItem.itemId);
+  const count = getItemCount(selectedItem.itemId);
+  if (!itemDef || count <= 0) {
+    return false;
+  }
+  if (selectedItem.kind === ItemKind.PLACEABLE) {
+    const placeableBlock = itemDef.placeableBlock;
+    if (!placeableBlock) {
+      return false;
+    }
+    if (tryPlacePlaceable(placeableBlock, col, row)) {
+      addItemCount(selectedItem.itemId, -1);
+      return true;
+    }
+    return false;
+  }
+
+  const placeBlock = itemDef.placeBlock;
+  if (!placeBlock) {
+    return false;
+  }
+  if (isPlayerInside(col, row)) {
+    return false;
+  }
+  if (!isPlaceableOccupied(col, row)) {
+    GameState.worldState.world[col][row] = placeBlock;
+    addItemCount(selectedItem.itemId, -1);
+    return true;
+  }
+  return false;
 }
 
 function mouseWheel(event) {
   if (event.delta > 0) {
-    GameState.selectedEquipIndex = (GameState.selectedEquipIndex + 1) % 5;
+    GameState.playerState.selectedEquipIndex = (GameState.playerState.selectedEquipIndex + 1) % EQUIPMENT_SLOT_COUNT;
   } else {
-    GameState.selectedEquipIndex = (GameState.selectedEquipIndex - 1 + 5) % 5;
+    GameState.playerState.selectedEquipIndex =
+      (GameState.playerState.selectedEquipIndex - 1 + EQUIPMENT_SLOT_COUNT) % EQUIPMENT_SLOT_COUNT;
   }
   return false;
-}
-
-// インタラクト入力を切り替える
-function tryToggleInteract() {
-  if (isOverlayOpen()) {
-    closeAllOverlays();
-    return true;
-  }
-  return tryInteractWithPlaceable();
-}
-
-// プレイヤーが触れている設置物とインタラクトする
-function tryInteractWithPlaceable() {
-  const placeable = findInteractablePlaceable();
-  if (!placeable) {
-    return false;
-  }
-  if (placeable.blockType === BlockType.CHEST) {
-    openChestUI(placeable);
-    return true;
-  }
-  if (placeable.blockType === BlockType.WORKBENCH) {
-    const toolType = getSelectedToolType();
-    if (toolType === ToolType.HAMMER) {
-      openWorkbenchUI(placeable);
-      return true;
-    }
-    return false;
-  }
-  return false;
-}
-
-// プレイヤーが接触している設置物を探す
-function findInteractablePlaceable() {
-  const foreground = findInteractableForegroundPlaceable();
-  if (foreground) {
-    return foreground;
-  }
-  return findInteractableWoodWall();
-}
-
-// プレイヤーが接触している前景設置物を探す
-function findInteractableForegroundPlaceable() {
-  for (let i = 0; i < GameState.placeables.length; i += 1) {
-    const placeable = GameState.placeables[i];
-    if (isPlayerTouchingPlaceable(placeable)) {
-      return placeable;
-    }
-  }
-  return null;
-}
-
-// プレイヤーが接触している木の壁を探す
-function findInteractableWoodWall() {
-  for (let i = 0; i < GameState.backgroundPlaceables.length; i += 1) {
-    const placeable = GameState.backgroundPlaceables[i];
-    if (isPlayerTouchingPlaceable(placeable)) {
-      return placeable;
-    }
-  }
-  return null;
-}
-
-// プレイヤーが設置物に接触しているか判定する
-function isPlayerTouchingPlaceable(placeable) {
-  const tiles = getPlaceableTiles(placeable);
-  for (let i = 0; i < tiles.length; i += 1) {
-    if (isPlayerTouchingTile(tiles[i].col, tiles[i].row)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// 設置物がリーチ範囲内か判定する
-function isPlaceableWithinReach(placeable) {
-  const tiles = getPlaceableTiles(placeable);
-  for (let i = 0; i < tiles.length; i += 1) {
-    const tile = tiles[i];
-    const centerX = tile.col * GameState.tileSize + GameState.tileSize * 0.5;
-    const centerY = tile.row * GameState.tileSize + GameState.tileSize * 0.5;
-    const distance = dist(GameState.player.x, GameState.player.y, centerX, centerY);
-    if (distance <= GameState.reachRange * GameState.tileSize) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// 指定タイルにプレイヤーが接触しているか判定する
-function isPlayerTouchingTile(col, row) {
-  const tileLeft = col * GameState.tileSize;
-  const tileTop = row * GameState.tileSize;
-  const tileRight = tileLeft + GameState.tileSize;
-  const tileBottom = tileTop + GameState.tileSize;
-  const halfW = GameState.player.w * 0.5;
-  const halfH = GameState.player.h * 0.5;
-  const playerLeft = GameState.player.x - halfW;
-  const playerRight = GameState.player.x + halfW;
-  const playerTop = GameState.player.y - halfH;
-  const playerBottom = GameState.player.y + halfH;
-
-  return (
-    playerLeft < tileRight &&
-    playerRight > tileLeft &&
-    playerTop < tileBottom &&
-    playerBottom > tileTop
-  );
-}
-
-function isPlayerInside(col, row) {
-  const blockX = col * GameState.tileSize;
-  const blockY = row * GameState.tileSize;
-  const halfW = GameState.player.w * 0.5;
-  const halfH = GameState.player.h * 0.5;
-
-  return !(
-    GameState.player.x + halfW <= blockX ||
-    GameState.player.x - halfW >= blockX + GameState.tileSize ||
-    GameState.player.y + halfH <= blockY ||
-    GameState.player.y - halfH >= blockY + GameState.tileSize
-  );
-}
-
-// 選択中のツール種別を取得する
-function getSelectedToolType() {
-  const selectedItem = getSelectedEquipment();
-  if (!selectedItem || selectedItem.kind !== ItemKind.TOOL) {
-    return null;
-  }
-  return selectedItem.tool;
-}
-
-// ツールごとの破壊対象を判定する
-function isBlockBreakableWithTool(blockType, toolType) {
-  if (toolType === ToolType.PICKAXE) {
-    return (
-      blockType === BlockType.DIRT ||
-      blockType === BlockType.GRASS ||
-      blockType === BlockType.STONE ||
-      blockType === BlockType.SAND ||
-      blockType === BlockType.COAL ||
-      blockType === BlockType.IRON
-    );
-  }
-  if (toolType === ToolType.AXE) {
-    return blockType === BlockType.WOOD || blockType === BlockType.LEAVES;
-  }
-  return false;
-}
-
-// ツールの影響範囲が隣接か確認する
-function isToolTargetAdjacent(col, row) {
-  const playerCol = floor(GameState.player.x / GameState.tileSize);
-  const playerRow = floor(GameState.player.y / GameState.tileSize);
-  const dir = GameState.player.dir >= 0 ? 1 : -1;
-  // 中心点の真上は存在しない想定なので、真上2段目と斜め上を優先する
-  const targetCols = [
-    playerCol,
-    playerCol + dir,
-    playerCol + dir,
-    playerCol + dir,
-    playerCol + dir,
-    playerCol,
-  ];
-  const targetRows = [
-    playerRow + 1,
-    playerRow + 1,
-    playerRow,
-    playerRow - 1,
-    playerRow - 2,
-    playerRow - 2,
-  ];
-  for (let i = 0; i < targetCols.length; i += 1) {
-    if (targetCols[i] === col && targetRows[i] === row) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// 作業机でクラフトを実行する（ダミー）
-function tryCraftAtWorkbench() {
-  const toolType = getSelectedToolType();
-  if (toolType !== ToolType.HAMMER) {
-    return false;
-  }
-  const placeable = findInteractablePlaceable();
-  if (!placeable || placeable.blockType !== BlockType.WORKBENCH) {
-    return false;
-  }
-  openWorkbenchUI(placeable);
-  return true;
-}
-
-// ハンマーで設置物を回収する
-function tryRetrievePlaceableWithHammer(col, row) {
-  const toolType = getSelectedToolType();
-  if (toolType !== ToolType.HAMMER) {
-    return false;
-  }
-  const placeable = findPlaceableAtClick(col, row);
-  if (!placeable) {
-    return false;
-  }
-  if (!isPlaceableWithinReach(placeable)) {
-    return false;
-  }
-  if (placeable.blockType === BlockType.CHEST && !isChestEmpty(placeable)) {
-    return false;
-  }
-  const placeableDef = getPlaceableDef(placeable.blockType);
-  if (!placeableDef) {
-    return false;
-  }
-  if (!ensureInventorySlotForItem(placeableDef.itemId)) {
-    return false;
-  }
-  let removed = null;
-  if (placeableDef.layer === "background") {
-    removed = removeWoodWallAt(placeable.col, placeable.row);
-  } else {
-    removed = removeForegroundPlaceableAt(placeable.col, placeable.row);
-  }
-  if (!removed) {
-    return false;
-  }
-  addItemCount(placeableDef.itemId, 1);
-  return true;
-}
-
-// クリック位置にある設置物を取得する（前景優先）
-function findPlaceableAtClick(col, row) {
-  const foreground = getForegroundPlaceableAt(col, row);
-  if (foreground) {
-    return foreground;
-  }
-  return getWoodWallAt(col, row);
-}
-
-// 収納箱が空かどうか確認する
-function isChestEmpty(placeable) {
-  if (placeable.storage) {
-    for (let i = 0; i < placeable.storage.length; i += 1) {
-      if (placeable.storage[i]) {
-        return false;
-      }
-    }
-  }
-  if (placeable.storageCounts) {
-    const keys = Object.keys(placeable.storageCounts);
-    for (let i = 0; i < keys.length; i += 1) {
-      if (placeable.storageCounts[keys[i]] > 0) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// 装備欄でアイテムIDのスロットを探す
-function findEquipmentSlotByItem(itemId) {
-  for (let i = 0; i < GameState.equipmentSlots.length; i += 1) {
-    const item = GameState.equipmentSlots[i];
-    if (item && isStackableItem(item) && item.itemId === itemId) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-// アイテムスロットを所持アイテム内に確保する
-function ensureInventorySlotForItem(itemId) {
-  if (findInventorySlotByItem(itemId) !== -1) {
-    return true;
-  }
-  if (findEquipmentSlotByItem(itemId) !== -1) {
-    return true;
-  }
-  const emptyIndex = findEmptyInventoryIndex();
-  if (emptyIndex === -1) {
-    return false;
-  }
-  const itemDef = getItemDef(itemId);
-  if (!itemDef) {
-    return false;
-  }
-  GameState.inventorySlots[emptyIndex] = { kind: itemDef.kind, itemId };
-  return true;
-}
-
-// ドロップアイテムを生成する
-function createDropItem(itemId, col, row) {
-  const x = col * GameState.tileSize + GameState.tileSize * 0.5;
-  const y = row * GameState.tileSize + GameState.tileSize * 0.5;
-  GameState.drops.push({
-    itemId,
-    x,
-    y,
-    vx: random(-0.6, 0.6),
-    vy: random(-2.0, -0.6),
-  });
-}
-
-// 木の扉を設置できるか確認して設置する
-function tryPlacePlaceable(blockType, col, row) {
-  const def = getPlaceableDef(blockType);
-  if (!def) {
-    return false;
-  }
-  const tiles = getPlaceableTilesForPlacement(def, col, row);
-  if (tiles.length === 0) {
-    return false;
-  }
-  for (let i = 0; i < tiles.length; i += 1) {
-    const tile = tiles[i];
-    if (!isInsideWorld(tile.col, tile.row)) {
-      return false;
-    }
-    if (GameState.world[tile.col][tile.row] !== BlockType.AIR) {
-      return false;
-    }
-    if (def.layer === "foreground") {
-      if (isPlaceableOccupied(tile.col, tile.row)) {
-        return false;
-      }
-    } else if (isWoodWallOccupied(tile.col, tile.row)) {
-      return false;
-    }
-    // 設置物はプレイヤー位置でも設置可能にする
-  }
-  addPlaceable(blockType, col, row);
-  return true;
-}
-
-// 設置物の占有タイルを計算する
-function getPlaceableTilesForPlacement(def, col, row) {
-  const tiles = [];
-  const originCol = col - def.origin.x;
-  const originRow = row - def.origin.y;
-  for (let dx = 0; dx < def.size.w; dx += 1) {
-    for (let dy = 0; dy < def.size.h; dy += 1) {
-      tiles.push({ col: originCol + dx, row: originRow + dy });
-    }
-  }
-  return tiles;
 }
