@@ -17,6 +17,7 @@ const GameState = {
   backgroundStars: [],
   clouds: [],
   placeables: [],
+  backgroundPlaceables: [],
   activePlaceable: null,
   timeOfDay: 0,
   playerSprite: null,
@@ -44,6 +45,9 @@ const ItemId = {
   COAL: "coal",
   IRON: "iron",
   SAND: "sand",
+  WOOD_WALL: "woodWall",
+  WOOD_DOOR: "woodDoor",
+  LADDER: "ladder",
   CHEST: "chest",
   WORKBENCH: "workbench",
 };
@@ -69,6 +73,9 @@ const BlockType = {
   SAND: 8,
   CHEST: 9,
   WORKBENCH: 10,
+  WOOD_WALL: 11,
+  WOOD_DOOR: 12,
+  LADDER: 13,
 };
 
 // ブロックの色定義
@@ -94,6 +101,9 @@ const BlockNames = {
   [BlockType.SAND]: "砂",
   [BlockType.CHEST]: "収納箱",
   [BlockType.WORKBENCH]: "作業机",
+  [BlockType.WOOD_WALL]: "木の壁",
+  [BlockType.WOOD_DOOR]: "木の扉",
+  [BlockType.LADDER]: "梯子",
 };
 
 // ブロックのドロップ定義
@@ -110,8 +120,57 @@ const BlockDefs = {
 
 // 設置物の定義
 const PlaceableDefs = {
-  [BlockType.CHEST]: { itemId: ItemId.CHEST, spriteIndex: 4 },
-  [BlockType.WORKBENCH]: { itemId: ItemId.WORKBENCH, spriteIndex: 5 },
+  [BlockType.CHEST]: {
+    itemId: ItemId.CHEST,
+    layer: "foreground",
+    size: { w: 1, h: 1 },
+    origin: { x: 0, y: 0 },
+    sprites: [{ dx: 0, dy: 0, index: 4 }],
+    iconSprites: [{ dx: 0, dy: 0, index: 4 }],
+    iconScale: 1,
+  },
+  [BlockType.WORKBENCH]: {
+    itemId: ItemId.WORKBENCH,
+    layer: "foreground",
+    size: { w: 1, h: 1 },
+    origin: { x: 0, y: 0 },
+    sprites: [{ dx: 0, dy: 0, index: 5 }],
+    iconSprites: [{ dx: 0, dy: 0, index: 5 }],
+    iconScale: 1,
+  },
+  [BlockType.WOOD_WALL]: {
+    itemId: ItemId.WOOD_WALL,
+    layer: "background",
+    size: { w: 1, h: 1 },
+    origin: { x: 0, y: 0 },
+    sprites: [{ dx: 0, dy: 0, index: 0 }],
+    iconSprites: [{ dx: 0, dy: 0, index: 0 }],
+    iconScale: 1,
+  },
+  [BlockType.WOOD_DOOR]: {
+    itemId: ItemId.WOOD_DOOR,
+    layer: "foreground",
+    size: { w: 1, h: 2 },
+    origin: { x: 0, y: 1 },
+    sprites: [
+      { dx: 0, dy: -1, index: 1 },
+      { dx: 0, dy: 0, index: 2 },
+    ],
+    iconSprites: [
+      { dx: 0, dy: 0, index: 1 },
+      { dx: 0, dy: 1, index: 2 },
+    ],
+    iconScale: 0.5,
+  },
+  [BlockType.LADDER]: {
+    itemId: ItemId.LADDER,
+    layer: "foreground",
+    size: { w: 1, h: 1 },
+    origin: { x: 0, y: 0 },
+    sprites: [{ dx: 0, dy: 0, index: 3 }],
+    iconSprites: [{ dx: 0, dy: 0, index: 3 }],
+    iconScale: 1,
+  },
 };
 
 // アイテムの定義
@@ -126,16 +185,19 @@ const ItemDefs = {
   [ItemId.SAND]: { kind: ItemKind.BLOCK, iconIndex: 7, placeBlock: BlockType.SAND },
   [ItemId.CHEST]: { kind: ItemKind.PLACEABLE, iconIndex: 4, placeableBlock: BlockType.CHEST },
   [ItemId.WORKBENCH]: { kind: ItemKind.PLACEABLE, iconIndex: 5, placeableBlock: BlockType.WORKBENCH },
+  [ItemId.WOOD_WALL]: { kind: ItemKind.PLACEABLE, iconIndex: 0, placeableBlock: BlockType.WOOD_WALL },
+  [ItemId.WOOD_DOOR]: { kind: ItemKind.PLACEABLE, iconIndex: 1, placeableBlock: BlockType.WOOD_DOOR },
+  [ItemId.LADDER]: { kind: ItemKind.PLACEABLE, iconIndex: 3, placeableBlock: BlockType.LADDER },
 };
 
-// 設置物スプライトの位置を返す（未対応は-1）
-function getPlaceableSpriteIndex(blockType) {
-  return PlaceableDefs[blockType]?.spriteIndex ?? -1;
+// 設置物の定義を取得する
+function getPlaceableDef(blockType) {
+  return PlaceableDefs[blockType] || null;
 }
 
 // オブジェクト扱いの設置物かどうか判定する
 function isPlaceableObject(blockType) {
-  return getPlaceableSpriteIndex(blockType) >= 0;
+  return Boolean(getPlaceableDef(blockType));
 }
 
 // アイテム定義を取得する

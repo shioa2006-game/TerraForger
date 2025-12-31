@@ -16,27 +16,68 @@ function initWorld() {
 // 設置物のリストを初期化する
 function initPlaceables() {
   GameState.placeables = [];
+  GameState.backgroundPlaceables = [];
+}
+
+// 設置物が占有するタイルを計算する
+function getPlaceableTiles(placeable) {
+  const def = getPlaceableDef(placeable.blockType);
+  if (!def) {
+    return [];
+  }
+  const tiles = [];
+  const originCol = placeable.col - def.origin.x;
+  const originRow = placeable.row - def.origin.y;
+  for (let dx = 0; dx < def.size.w; dx += 1) {
+    for (let dy = 0; dy < def.size.h; dy += 1) {
+      tiles.push({ col: originCol + dx, row: originRow + dy });
+    }
+  }
+  return tiles;
 }
 
 // 指定タイルに設置物があるか確認する
-function getPlaceableAt(col, row) {
-  for (let i = 0; i < GameState.placeables.length; i += 1) {
-    const placeable = GameState.placeables[i];
-    if (placeable.col === col && placeable.row === row) {
-      return placeable;
+function findPlaceableAt(list, col, row) {
+  for (let i = 0; i < list.length; i += 1) {
+    const placeable = list[i];
+    const tiles = getPlaceableTiles(placeable);
+    for (let t = 0; t < tiles.length; t += 1) {
+      if (tiles[t].col === col && tiles[t].row === row) {
+        return placeable;
+      }
     }
   }
   return null;
 }
 
-// 指定タイルが設置物で埋まっているか確認する
+// 指定タイルに前景設置物があるか確認する
+function getForegroundPlaceableAt(col, row) {
+  return findPlaceableAt(GameState.placeables, col, row);
+}
+
+// 指定タイルに木の壁があるか確認する
+function getWoodWallAt(col, row) {
+  return findPlaceableAt(GameState.backgroundPlaceables, col, row);
+}
+
+// 指定タイルが前景設置物で埋まっているか確認する
 function isPlaceableOccupied(col, row) {
-  return getPlaceableAt(col, row) !== null;
+  return getForegroundPlaceableAt(col, row) !== null;
+}
+
+// 指定タイルが木の壁で埋まっているか確認する
+function isWoodWallOccupied(col, row) {
+  return getWoodWallAt(col, row) !== null;
 }
 
 // 設置物を追加する
 function addPlaceable(blockType, col, row) {
   const placeable = { blockType, col, row };
+  const def = getPlaceableDef(blockType);
+  if (def && def.layer === "background") {
+    GameState.backgroundPlaceables.push(placeable);
+    return;
+  }
   if (blockType === BlockType.CHEST) {
     // 収納箱は専用のスロットを持つ
     placeable.storage = new Array(60).fill(null);
@@ -45,13 +86,31 @@ function addPlaceable(blockType, col, row) {
   GameState.placeables.push(placeable);
 }
 
-// 設置物を取り除く
-function removePlaceableAt(col, row) {
+// 前景設置物を取り除く
+function removeForegroundPlaceableAt(col, row) {
   for (let i = 0; i < GameState.placeables.length; i += 1) {
     const placeable = GameState.placeables[i];
-    if (placeable.col === col && placeable.row === row) {
-      GameState.placeables.splice(i, 1);
-      return placeable;
+    const tiles = getPlaceableTiles(placeable);
+    for (let t = 0; t < tiles.length; t += 1) {
+      if (tiles[t].col === col && tiles[t].row === row) {
+        GameState.placeables.splice(i, 1);
+        return placeable;
+      }
+    }
+  }
+  return null;
+}
+
+// 木の壁を取り除く
+function removeWoodWallAt(col, row) {
+  for (let i = 0; i < GameState.backgroundPlaceables.length; i += 1) {
+    const placeable = GameState.backgroundPlaceables[i];
+    const tiles = getPlaceableTiles(placeable);
+    for (let t = 0; t < tiles.length; t += 1) {
+      if (tiles[t].col === col && tiles[t].row === row) {
+        GameState.backgroundPlaceables.splice(i, 1);
+        return placeable;
+      }
     }
   }
   return null;

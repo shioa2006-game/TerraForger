@@ -12,6 +12,7 @@ const uiElements = {
 const ITEM_ICON_SIZE = 36;
 const ITEM_ICON_GAP = 6;
 const DROP_ICON_GAP = 6;
+const PLACEABLE_SHEET_WIDTH = ITEM_ICON_SIZE * 8 + ITEM_ICON_GAP * 7;
 const CHEST_COLUMNS = 10;
 const CHEST_ROWS = 6;
 const CHEST_SLOT_COUNT = CHEST_COLUMNS * CHEST_ROWS;
@@ -21,11 +22,17 @@ function initInventory() {
   // 収納箱と作業机を初期所持アイテムに追加
   GameState.inventory[ItemId.CHEST] = 1;
   GameState.inventory[ItemId.WORKBENCH] = 1;
+  GameState.inventory[ItemId.WOOD_WALL] = 20;
+  GameState.inventory[ItemId.WOOD_DOOR] = 1;
+  GameState.inventory[ItemId.LADDER] = 1;
 
   GameState.inventorySlots = new Array(30).fill(null);
   // 収納箱と作業机のスロットを追加
   GameState.inventorySlots[0] = { kind: ItemKind.PLACEABLE, itemId: ItemId.CHEST };
   GameState.inventorySlots[1] = { kind: ItemKind.PLACEABLE, itemId: ItemId.WORKBENCH };
+  GameState.inventorySlots[2] = { kind: ItemKind.PLACEABLE, itemId: ItemId.WOOD_WALL };
+  GameState.inventorySlots[3] = { kind: ItemKind.PLACEABLE, itemId: ItemId.WOOD_DOOR };
+  GameState.inventorySlots[4] = { kind: ItemKind.PLACEABLE, itemId: ItemId.LADDER };
 
   GameState.equipmentSlots = [
     { kind: ItemKind.TOOL, tool: ToolType.PICKAXE },
@@ -394,6 +401,8 @@ function updateEquipmentSlots() {
     if (!item) {
       entry.icon.style.background = "transparent";
       entry.icon.style.backgroundImage = "";
+      entry.icon.style.width = "36px";
+      entry.icon.style.height = "36px";
       entry.icon.style.opacity = "0.35";
       entry.slot.setAttribute("draggable", "false");
       continue;
@@ -416,10 +425,7 @@ function updateEquipmentSlots() {
       entry.icon.style.opacity = "1";
       entry.count.textContent = String(getItemCount(item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
-      const toolIndex = getToolSpriteIndex(item.tool);
-      entry.icon.style.backgroundImage = "url('assets/items.png')";
-      entry.icon.style.backgroundPosition = `-${toolIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
-      entry.icon.style.backgroundColor = "transparent";
+      setToolSlotIcon(entry.icon, item.tool);
       entry.icon.style.opacity = "1";
     }
   }
@@ -433,6 +439,8 @@ function updateInventorySlots() {
     if (!item) {
       entry.icon.style.background = "transparent";
       entry.icon.style.backgroundImage = "";
+      entry.icon.style.width = "36px";
+      entry.icon.style.height = "36px";
       entry.icon.style.opacity = "0.35";
       entry.count.textContent = "";
       entry.slot.setAttribute("draggable", "false");
@@ -456,10 +464,7 @@ function updateInventorySlots() {
       entry.icon.style.opacity = "1";
       entry.count.textContent = String(getItemCount(item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
-      const toolIndex = getToolSpriteIndex(item.tool);
-      entry.icon.style.backgroundImage = "url('assets/items.png')";
-      entry.icon.style.backgroundPosition = `-${toolIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
-      entry.icon.style.backgroundColor = "transparent";
+      setToolSlotIcon(entry.icon, item.tool);
       entry.icon.style.opacity = "1";
       entry.count.textContent = "1";
     }
@@ -486,6 +491,18 @@ function getToolSpriteIndex(toolType) {
     return 2;
   }
   return 3;
+}
+
+// ツール用のアイコン表示を統一する
+function setToolSlotIcon(icon, toolType) {
+  const toolIndex = getToolSpriteIndex(toolType);
+  icon.style.width = "36px";
+  icon.style.height = "36px";
+  icon.style.backgroundImage = "url('assets/items.png')";
+  icon.style.backgroundPosition = `-${toolIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
+  icon.style.backgroundSize = "";
+  icon.style.backgroundRepeat = "no-repeat";
+  icon.style.backgroundColor = "transparent";
 }
 
 // 収納箱UIを開く
@@ -540,6 +557,8 @@ function renderChestSlots(placeable) {
     const item = storage[i] || null;
     entry.icon.style.background = "transparent";
     entry.icon.style.backgroundImage = "";
+    entry.icon.style.width = "36px";
+    entry.icon.style.height = "36px";
     entry.count.textContent = "";
     if (!item) {
       entry.icon.style.opacity = "0.35";
@@ -550,10 +569,7 @@ function renderChestSlots(placeable) {
       setItemSlotIcon(entry.icon, item.itemId);
       entry.count.textContent = String(getChestItemCount(placeable, item.itemId));
     } else if (item.kind === ItemKind.TOOL) {
-      const toolIndex = getToolSpriteIndex(item.tool);
-      entry.icon.style.backgroundImage = "url('assets/items.png')";
-      entry.icon.style.backgroundPosition = `-${toolIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
-      entry.icon.style.backgroundColor = "transparent";
+      setToolSlotIcon(entry.icon, item.tool);
       entry.count.textContent = "1";
     }
   }
@@ -740,12 +756,18 @@ function setItemSlotIcon(icon, itemId) {
     icon.style.backgroundColor = "transparent";
     return;
   }
+  icon.style.width = "36px";
+  icon.style.height = "36px";
 
   if (itemDef.kind === ItemKind.PLACEABLE) {
-    const placeableIndex = itemDef.iconIndex;
-    icon.style.backgroundImage = "url('assets/placeables.png')";
-    icon.style.backgroundPosition = `-${placeableIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
-    icon.style.backgroundColor = "transparent";
+    const placeableDef = getPlaceableDef(itemDef.placeableBlock);
+    if (!placeableDef) {
+      icon.style.background = "transparent";
+      icon.style.backgroundImage = "";
+      icon.style.backgroundColor = "transparent";
+      return;
+    }
+    applyPlaceableIcon(icon, placeableDef);
     return;
   }
 
@@ -753,11 +775,64 @@ function setItemSlotIcon(icon, itemId) {
     const srcX = itemDef.iconIndex * (ITEM_ICON_SIZE + DROP_ICON_GAP);
     icon.style.backgroundImage = "url('assets/drops.png')";
     icon.style.backgroundPosition = `-${srcX}px 0px`;
+    icon.style.backgroundSize = "";
+    icon.style.backgroundRepeat = "no-repeat";
     icon.style.backgroundColor = "transparent";
     return;
   }
 
   icon.style.background = "transparent";
   icon.style.backgroundImage = "";
+  icon.style.backgroundColor = "transparent";
+}
+
+// 設置物のアイコン表示を共通化する
+function applyPlaceableIcon(icon, def) {
+  const sprites = def.iconSprites && def.iconSprites.length > 0 ? def.iconSprites : def.sprites;
+  if (!sprites || sprites.length === 0) {
+    icon.style.background = "transparent";
+    icon.style.backgroundImage = "";
+    icon.style.backgroundColor = "transparent";
+    return;
+  }
+
+  const scale = def.iconScale ?? 1;
+  const stride = (ITEM_ICON_SIZE + ITEM_ICON_GAP) * scale;
+  const sheetWidth = PLACEABLE_SHEET_WIDTH * scale;
+  const sheetHeight = ITEM_ICON_SIZE * scale;
+
+  let minDx = sprites[0].dx;
+  let maxDx = sprites[0].dx;
+  let minDy = sprites[0].dy;
+  let maxDy = sprites[0].dy;
+  for (let i = 1; i < sprites.length; i += 1) {
+    minDx = min(minDx, sprites[i].dx);
+    maxDx = max(maxDx, sprites[i].dx);
+    minDy = min(minDy, sprites[i].dy);
+    maxDy = max(maxDy, sprites[i].dy);
+  }
+
+  const iconWidth = (maxDx - minDx + 1) * ITEM_ICON_SIZE * scale;
+  const iconHeight = (maxDy - minDy + 1) * ITEM_ICON_SIZE * scale;
+  icon.style.width = `${iconWidth}px`;
+  icon.style.height = `${iconHeight}px`;
+
+  const images = [];
+  const positions = [];
+  const sizes = [];
+  for (let i = 0; i < sprites.length; i += 1) {
+    const sprite = sprites[i];
+    const offsetX = (sprite.dx - minDx) * ITEM_ICON_SIZE * scale;
+    const offsetY = (sprite.dy - minDy) * ITEM_ICON_SIZE * scale;
+    const srcX = -sprite.index * stride + offsetX;
+    images.push("url('assets/placeables.png')");
+    positions.push(`${srcX}px ${offsetY}px`);
+    sizes.push(`${sheetWidth}px ${sheetHeight}px`);
+  }
+
+  icon.style.backgroundImage = images.join(", ");
+  icon.style.backgroundPosition = positions.join(", ");
+  icon.style.backgroundSize = sizes.join(", ");
+  icon.style.backgroundRepeat = sprites.map(() => "no-repeat").join(", ");
   icon.style.backgroundColor = "transparent";
 }

@@ -31,8 +31,9 @@ function draw() {
 
   push();
   translate(-GameState.cameraPos.x, -GameState.cameraPos.y);
-  drawWorld();
+  drawWoodWalls();
   drawPlaceables();
+  drawWorld();
   drawDrops();
   drawPlayer();
   drawParticles();

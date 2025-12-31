@@ -24,7 +24,7 @@ function initPlayer() {
 function updatePlayer() {
   const speed = 3.0;
   const gravity = 0.32;
-  const jumpPower = 7.2;
+  const jumpPower = 5.2;
   const friction = 0.8;
 
   if (GameState.keyState.left) {

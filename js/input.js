@@ -90,10 +90,10 @@ function mousePressed() {
       }
     }
   } else if (mouseButton === RIGHT) {
-    if (tryRetrievePlaceableWithHammer()) {
+    if (tryRetrievePlaceableWithHammer(col, row)) {
       return;
     }
-    if (GameState.world[col][row] === BlockType.AIR && !isPlayerInside(col, row)) {
+    if (GameState.world[col][row] === BlockType.AIR) {
       const selectedItem = getSelectedEquipment();
       if (selectedItem && (selectedItem.kind === ItemKind.BLOCK || selectedItem.kind === ItemKind.PLACEABLE)) {
         const itemDef = getItemDef(selectedItem.itemId);
@@ -106,8 +106,7 @@ function mousePressed() {
           if (!placeableBlock) {
             return;
           }
-          if (!isPlaceableOccupied(col, row)) {
-            addPlaceable(placeableBlock, col, row);
+          if (tryPlacePlaceable(placeableBlock, col, row)) {
             addItemCount(selectedItem.itemId, -1);
           }
           return;
@@ -115,6 +114,9 @@ function mousePressed() {
 
         const placeBlock = itemDef.placeBlock;
         if (!placeBlock) {
+          return;
+        }
+        if (isPlayerInside(col, row)) {
           return;
         }
         if (!isPlaceableOccupied(col, row)) {
@@ -167,13 +169,59 @@ function tryInteractWithPlaceable() {
 
 // プレイヤーが接触している設置物を探す
 function findInteractablePlaceable() {
+  const foreground = findInteractableForegroundPlaceable();
+  if (foreground) {
+    return foreground;
+  }
+  return findInteractableWoodWall();
+}
+
+// プレイヤーが接触している前景設置物を探す
+function findInteractableForegroundPlaceable() {
   for (let i = 0; i < GameState.placeables.length; i += 1) {
     const placeable = GameState.placeables[i];
-    if (isPlayerTouchingTile(placeable.col, placeable.row)) {
+    if (isPlayerTouchingPlaceable(placeable)) {
       return placeable;
     }
   }
   return null;
+}
+
+// プレイヤーが接触している木の壁を探す
+function findInteractableWoodWall() {
+  for (let i = 0; i < GameState.backgroundPlaceables.length; i += 1) {
+    const placeable = GameState.backgroundPlaceables[i];
+    if (isPlayerTouchingPlaceable(placeable)) {
+      return placeable;
+    }
+  }
+  return null;
+}
+
+// プレイヤーが設置物に接触しているか判定する
+function isPlayerTouchingPlaceable(placeable) {
+  const tiles = getPlaceableTiles(placeable);
+  for (let i = 0; i < tiles.length; i += 1) {
+    if (isPlayerTouchingTile(tiles[i].col, tiles[i].row)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// 設置物がリーチ範囲内か判定する
+function isPlaceableWithinReach(placeable) {
+  const tiles = getPlaceableTiles(placeable);
+  for (let i = 0; i < tiles.length; i += 1) {
+    const tile = tiles[i];
+    const centerX = tile.col * GameState.tileSize + GameState.tileSize * 0.5;
+    const centerY = tile.row * GameState.tileSize + GameState.tileSize * 0.5;
+    const distance = dist(GameState.player.x, GameState.player.y, centerX, centerY);
+    if (distance <= GameState.reachRange * GameState.tileSize) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // 指定タイルにプレイヤーが接触しているか判定する
@@ -283,31 +331,48 @@ function tryCraftAtWorkbench() {
 }
 
 // ハンマーで設置物を回収する
-function tryRetrievePlaceableWithHammer() {
+function tryRetrievePlaceableWithHammer(col, row) {
   const toolType = getSelectedToolType();
   if (toolType !== ToolType.HAMMER) {
     return false;
   }
-  const placeable = findInteractablePlaceable();
+  const placeable = findPlaceableAtClick(col, row);
   if (!placeable) {
+    return false;
+  }
+  if (!isPlaceableWithinReach(placeable)) {
     return false;
   }
   if (placeable.blockType === BlockType.CHEST && !isChestEmpty(placeable)) {
     return false;
   }
-  const placeableDef = PlaceableDefs[placeable.blockType];
+  const placeableDef = getPlaceableDef(placeable.blockType);
   if (!placeableDef) {
     return false;
   }
   if (!ensureInventorySlotForItem(placeableDef.itemId)) {
     return false;
   }
-  const removed = removePlaceableAt(placeable.col, placeable.row);
+  let removed = null;
+  if (placeableDef.layer === "background") {
+    removed = removeWoodWallAt(placeable.col, placeable.row);
+  } else {
+    removed = removeForegroundPlaceableAt(placeable.col, placeable.row);
+  }
   if (!removed) {
     return false;
   }
   addItemCount(placeableDef.itemId, 1);
   return true;
+}
+
+// クリック位置にある設置物を取得する（前景優先）
+function findPlaceableAtClick(col, row) {
+  const foreground = getForegroundPlaceableAt(col, row);
+  if (foreground) {
+    return foreground;
+  }
+  return getWoodWallAt(col, row);
 }
 
 // 収納箱が空かどうか確認する
@@ -372,4 +437,48 @@ function createDropItem(itemId, col, row) {
     vx: random(-0.6, 0.6),
     vy: random(-2.0, -0.6),
   });
+}
+
+// 木の扉を設置できるか確認して設置する
+function tryPlacePlaceable(blockType, col, row) {
+  const def = getPlaceableDef(blockType);
+  if (!def) {
+    return false;
+  }
+  const tiles = getPlaceableTilesForPlacement(def, col, row);
+  if (tiles.length === 0) {
+    return false;
+  }
+  for (let i = 0; i < tiles.length; i += 1) {
+    const tile = tiles[i];
+    if (!isInsideWorld(tile.col, tile.row)) {
+      return false;
+    }
+    if (GameState.world[tile.col][tile.row] !== BlockType.AIR) {
+      return false;
+    }
+    if (def.layer === "foreground") {
+      if (isPlaceableOccupied(tile.col, tile.row)) {
+        return false;
+      }
+    } else if (isWoodWallOccupied(tile.col, tile.row)) {
+      return false;
+    }
+    // 設置物はプレイヤー位置でも設置可能にする
+  }
+  addPlaceable(blockType, col, row);
+  return true;
+}
+
+// 設置物の占有タイルを計算する
+function getPlaceableTilesForPlacement(def, col, row) {
+  const tiles = [];
+  const originCol = col - def.origin.x;
+  const originRow = row - def.origin.y;
+  for (let dx = 0; dx < def.size.w; dx += 1) {
+    for (let dy = 0; dy < def.size.h; dy += 1) {
+      tiles.push({ col: originCol + dx, row: originRow + dy });
+    }
+  }
+  return tiles;
 }

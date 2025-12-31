@@ -29,6 +29,18 @@ function drawWorld() {
   }
 }
 
+// 木の壁を背景として描画する
+function drawWoodWalls() {
+  if (!GameState.placeableSprite) {
+    return;
+  }
+
+  for (let i = 0; i < GameState.backgroundPlaceables.length; i += 1) {
+    const placeable = GameState.backgroundPlaceables[i];
+    drawPlaceable(placeable);
+  }
+}
+
 // 設置物を描画する
 function drawPlaceables() {
   if (!GameState.placeableSprite) {
@@ -37,13 +49,24 @@ function drawPlaceables() {
 
   for (let i = 0; i < GameState.placeables.length; i += 1) {
     const placeable = GameState.placeables[i];
-    const placeableIndex = getPlaceableSpriteIndex(placeable.blockType);
-    if (placeableIndex < 0) {
-      continue;
-    }
-    const x = placeable.col * GameState.tileSize;
-    const y = placeable.row * GameState.tileSize;
-    const srcX = placeableIndex * (PLACEABLE_FRAME_SIZE + PLACEABLE_SPRITE_GAP);
+    drawPlaceable(placeable);
+  }
+}
+
+// 設置物を描画する
+function drawPlaceable(placeable) {
+  const def = getPlaceableDef(placeable.blockType);
+  if (!def || !GameState.placeableSprite) {
+    return;
+  }
+  const stride = PLACEABLE_FRAME_SIZE + PLACEABLE_SPRITE_GAP;
+  for (let i = 0; i < def.sprites.length; i += 1) {
+    const sprite = def.sprites[i];
+    const drawCol = placeable.col + sprite.dx;
+    const drawRow = placeable.row + sprite.dy;
+    const x = drawCol * GameState.tileSize;
+    const y = drawRow * GameState.tileSize;
+    const srcX = sprite.index * stride;
     imageMode(CORNER);
     image(
       GameState.placeableSprite,
@@ -91,26 +114,6 @@ function drawDrops() {
 
 // ブロック描画は色と陰影で立体感を出す
 function drawBlock(col, row, blockType) {
-  const placeableIndex = getPlaceableSpriteIndex(blockType);
-  if (placeableIndex >= 0 && GameState.placeableSprite) {
-    const x = col * GameState.tileSize;
-    const y = row * GameState.tileSize;
-    const srcX = placeableIndex * (PLACEABLE_FRAME_SIZE + PLACEABLE_SPRITE_GAP);
-    imageMode(CORNER);
-    image(
-      GameState.placeableSprite,
-      x,
-      y,
-      GameState.tileSize,
-      GameState.tileSize,
-      srcX,
-      0,
-      PLACEABLE_FRAME_SIZE,
-      PLACEABLE_FRAME_SIZE
-    );
-    return;
-  }
-
   const colors = BlockColors[blockType];
   if (!colors) {
     return;
