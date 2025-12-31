@@ -58,14 +58,37 @@ p5.js を使ったブラウザ向けの2Dサンドボックスゲームです。
 - HUD: 座標/リーチ範囲が更新される
 
 ## フォルダ構成
-- `index.html`: エントリポイント
-- `style.css`: 画面レイアウトと見た目
-- `js/state.js`: ゲーム状態と定数
-- `js/world.js`: 地形生成と地形判定
-- `js/player.js`: プレイヤー制御
-- `js/background.js`: 背景演出
-- `js/particles.js`: パーティクル
-- `js/render.js`: 描画
-- `js/ui.js`: HUDとインベントリUI
-- `js/input.js`: 入力処理
-- `js/main.js`: setup/draw のメインループ
+
+```
+TerraForger/
+├── index.html          # エントリポイント
+├── style.css           # 画面レイアウトと見た目
+├── assets/             # スプライト画像
+│   ├── drops.png       # ドロップアイテム
+│   ├── items.png       # ツールアイテム
+│   ├── placeables.png  # 設置物
+│   └── player.png      # プレイヤー
+└── js/
+    ├── state.js            # ゲーム状態と定数（GameState、ブロック/アイテム/ツール定義）
+    ├── utils.js            # 共通ユーティリティ（画面座標変換など）
+    ├── world.js            # 地形生成と地形判定、設置物管理
+    ├── player.js           # プレイヤー制御
+    ├── background.js       # 背景演出（昼夜、星、雲）
+    ├── particles.js        # パーティクル
+    ├── render.js           # 描画処理
+    ├── ui.js               # UI初期化の入口
+    ├── ui_state.js         # UI共有状態（DOM参照）
+    ├── ui_helpers.js       # UI補助関数
+    ├── ui_icons.js         # アイコン表示の共通処理
+    ├── ui_sidebar.js       # 右カラムの描画更新
+    ├── ui_equipment_view.js # 装備UI生成
+    ├── ui_inventory.js     # インベントリデータ初期化
+    ├── ui_inventory_view.js # インベントリUI生成
+    ├── ui_dragdrop.js      # ドラッグ&ドロップの共通処理
+    ├── ui_overlays.js      # オーバーレイUI関連
+    ├── ui_chest.js         # 収納箱UI関連
+    ├── ui_workbench.js     # 作業机UI関連
+    ├── input.js            # 入力処理（キーボード/マウス）
+    ├── input_helpers.js    # 入力補助ロジック
+    └── main.js             # setup/draw のメインループ
+```
