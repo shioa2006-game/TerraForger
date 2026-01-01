@@ -1,5 +1,11 @@
 ﻿// 入力処理
 function keyPressed() {
+  // オーバーレイが開いている間はESCとEキーのみ許可
+  if (isOverlayOpen()) {
+    handleOverlayKeyDown();
+    handleInteractKeyDown();
+    return;
+  }
   handleMovementKeyDown();
   handleEquipmentKeyDown();
   handleResetKeyDown();
