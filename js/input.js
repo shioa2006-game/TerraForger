@@ -1,9 +1,10 @@
 ﻿// 入力処理
 function keyPressed() {
-  // オーバーレイが開いている間はESCとEキーのみ許可
+  // オーバーレイが開いている間はESCとEキー、オーバーレイ固有の操作のみ許可
   if (isOverlayOpen()) {
     handleOverlayKeyDown();
     handleInteractKeyDown();
+    handleWorkbenchNavigation();
     return;
   }
   handleMovementKeyDown();
@@ -15,6 +16,18 @@ function keyPressed() {
 
 function keyReleased() {
   handleMovementKeyUp();
+}
+
+// 作業机UIの矢印キー操作を処理する
+function handleWorkbenchNavigation() {
+  if (!uiElements.workbenchOverlay || uiElements.workbenchOverlay.classList.contains("hidden")) {
+    return;
+  }
+  if (keyCode === UP_ARROW) {
+    navigateRecipe(-1);
+  } else if (keyCode === DOWN_ARROW) {
+    navigateRecipe(1);
+  }
 }
 
 // 移動キーの押下を処理する
