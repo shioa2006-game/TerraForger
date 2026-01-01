@@ -207,6 +207,10 @@ function tryPlaceSelectedItem(col, row) {
 }
 
 function mouseWheel(event) {
+  // オーバーレイが開いている間は装備欄のホイール選択を無効化
+  if (isOverlayOpen()) {
+    return false;
+  }
   if (event.delta > 0) {
     GameState.playerState.selectedEquipIndex = (GameState.playerState.selectedEquipIndex + 1) % EQUIPMENT_SLOT_COUNT;
   } else {
