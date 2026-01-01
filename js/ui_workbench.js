@@ -243,9 +243,37 @@ function craftSelectedRecipe(amount) {
   // 結果アイテムを追加
   addItemCount(recipe.resultItemId, recipe.resultCount * amount);
 
+  // スロットにアイテムがない場合は空きスロットに追加
+  ensureItemInSlot(recipe.resultItemId);
+
   // UIを更新
   updateWorkbenchUI();
   updateSidebarUI();
+}
+
+// アイテムがスロットに存在することを保証する
+function ensureItemInSlot(itemId) {
+  // 既にスロットにあれば何もしない
+  if (findInventorySlotByItem(itemId) >= 0) {
+    return true;
+  }
+
+  // 空きスロットを探して追加
+  const emptyIndex = findEmptyInventoryIndex();
+  if (emptyIndex < 0) {
+    return false;
+  }
+
+  const itemDef = getItemDef(itemId);
+  if (!itemDef) {
+    return false;
+  }
+
+  GameState.inventoryState.inventorySlots[emptyIndex] = {
+    kind: itemDef.kind,
+    itemId: itemId,
+  };
+  return true;
 }
 
 // キーボードイベント処理
