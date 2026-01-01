@@ -5,7 +5,7 @@ const WorkbenchState = {
   selectedRecipeIndex: 0,
   recipeElements: [],
   craftButtons: [],
-  materialsDisplay: null,
+  recipeList: null,
 };
 
 // 作業机オーバーレイを作成する
@@ -28,6 +28,7 @@ function createWorkbenchOverlay(root) {
   // レシピ一覧コンテナ
   const recipeList = document.createElement("div");
   recipeList.className = "workbench-recipe-list";
+  WorkbenchState.recipeList = recipeList;
 
   // レシピ項目を作成
   WorkbenchState.recipeElements = [];
@@ -37,11 +38,6 @@ function createWorkbenchOverlay(root) {
     recipeList.appendChild(recipeItem);
     WorkbenchState.recipeElements.push(recipeItem);
   }
-
-  // 素材表示エリア
-  const materialsArea = document.createElement("div");
-  materialsArea.className = "workbench-materials";
-  WorkbenchState.materialsDisplay = materialsArea;
 
   // 作成ボタンエリア
   const buttonArea = document.createElement("div");
@@ -67,7 +63,6 @@ function createWorkbenchOverlay(root) {
 
   panel.appendChild(title);
   panel.appendChild(recipeList);
-  panel.appendChild(materialsArea);
   panel.appendChild(buttonArea);
   panel.appendChild(hint);
   overlay.appendChild(panel);
@@ -153,44 +148,18 @@ function updateWorkbenchUI() {
     elem.classList.toggle("disabled", !canCraft);
   }
 
-  // 素材表示を更新
-  updateMaterialsDisplay();
+  // 選択中のレシピを表示領域内にスクロール
+  scrollToSelectedRecipe();
 
   // 作成ボタンの状態を更新
   updateCraftButtons();
 }
 
-// 素材表示を更新する
-function updateMaterialsDisplay() {
-  const display = WorkbenchState.materialsDisplay;
-  if (!display) {
-    return;
-  }
-
-  display.innerHTML = "";
-
-  const recipe = CraftingRecipes[WorkbenchState.selectedRecipeIndex];
-  if (!recipe) {
-    return;
-  }
-
-  const header = document.createElement("div");
-  header.className = "materials-header";
-  header.textContent = `「${recipe.name}」の必要素材:`;
-  display.appendChild(header);
-
-  for (const mat of recipe.materials) {
-    const line = document.createElement("div");
-    line.className = "materials-line";
-
-    const owned = getItemCount(mat.itemId);
-    const enough = owned >= mat.count;
-
-    line.textContent = `${ItemNames[mat.itemId]}: ${mat.count}個 (所持: ${owned}個)`;
-    line.classList.toggle("materials-enough", enough);
-    line.classList.toggle("materials-lacking", !enough);
-
-    display.appendChild(line);
+// 選択中のレシピを表示領域内にスクロールする
+function scrollToSelectedRecipe() {
+  const selectedElem = WorkbenchState.recipeElements[WorkbenchState.selectedRecipeIndex];
+  if (selectedElem && WorkbenchState.recipeList) {
+    selectedElem.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
 

@@ -254,6 +254,11 @@ canvas {
   background: #0f1118;
   max-height: 180px;
   overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.workbench-recipe-list::-webkit-scrollbar {
+  display: none;
 }
 
 .workbench-recipe-item {
@@ -300,33 +305,6 @@ canvas {
 .recipe-materials {
   font-size: 0.85rem;
   color: #a0a5b2;
-}
-
-.workbench-materials {
-  background: #0f1118;
-  border: 1px solid #8f6c3a;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-}
-
-.materials-header {
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--accent);
-}
-
-.materials-line {
-  font-size: 0.9rem;
-  padding: 4px 0;
-}
-
-.materials-enough {
-  color: #6abe6a;
-}
-
-.materials-lacking {
-  color: #e05555;
 }
 
 .workbench-buttons {
