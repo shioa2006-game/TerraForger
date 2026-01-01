@@ -274,6 +274,23 @@ const BlockNames = {
   [BlockType.LADDER]: "梯子",
 };
 
+// アイテム名（UI表示用）
+const ItemNames = {
+  [ItemId.DIRT]: "土",
+  [ItemId.GRASS]: "草",
+  [ItemId.STONE]: "石",
+  [ItemId.WOOD]: "木ブロック",
+  [ItemId.BRANCH]: "枝ブロック",
+  [ItemId.COAL]: "石炭",
+  [ItemId.IRON]: "鉄",
+  [ItemId.SAND]: "砂",
+  [ItemId.WOOD_WALL]: "木の壁",
+  [ItemId.WOOD_DOOR]: "木の扉",
+  [ItemId.LADDER]: "木の梯子",
+  [ItemId.CHEST]: "収納箱",
+  [ItemId.WORKBENCH]: "作業机",
+};
+
 // ブロックのドロップ定義
 const BlockDefs = {
   [BlockType.DIRT]: { dropItemId: ItemId.DIRT },
@@ -357,6 +374,43 @@ const ItemDefs = {
   [ItemId.WOOD_DOOR]: { kind: ItemKind.PLACEABLE, iconIndex: 1, placeableBlock: BlockType.WOOD_DOOR },
   [ItemId.LADDER]: { kind: ItemKind.PLACEABLE, iconIndex: 3, placeableBlock: BlockType.LADDER },
 };
+
+// クラフトレシピの定義
+const CraftingRecipes = [
+  {
+    name: "木の壁",
+    resultItemId: ItemId.WOOD_WALL,
+    resultCount: 1,
+    materials: [{ itemId: ItemId.WOOD, count: 1 }],
+  },
+  {
+    name: "木の扉",
+    resultItemId: ItemId.WOOD_DOOR,
+    resultCount: 1,
+    materials: [{ itemId: ItemId.WOOD, count: 2 }],
+  },
+  {
+    name: "木の梯子",
+    resultItemId: ItemId.LADDER,
+    resultCount: 1,
+    materials: [{ itemId: ItemId.BRANCH, count: 2 }],
+  },
+  {
+    name: "収納箱",
+    resultItemId: ItemId.CHEST,
+    resultCount: 1,
+    materials: [
+      { itemId: ItemId.WOOD, count: 1 },
+      { itemId: ItemId.BRANCH, count: 1 },
+    ],
+  },
+  {
+    name: "作業机",
+    resultItemId: ItemId.WORKBENCH,
+    resultCount: 1,
+    materials: [{ itemId: ItemId.WOOD, count: 3 }],
+  },
+];
 
 // 設置物の定義を取得する
 function getPlaceableDef(blockType) {
