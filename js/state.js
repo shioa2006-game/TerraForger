@@ -8,7 +8,7 @@ const GameState = {
   },
   playerState: {
     entity: null,
-    keyState: { left: false, right: false, up: false },
+    keyState: { left: false, right: false, up: false, down: false },
     reachRange: 2,
     selectedEquipIndex: 0,
     pickaxeSwing: 0,
@@ -172,7 +172,7 @@ const INITIAL_CHEST_COUNT = 1;
 const INITIAL_WORKBENCH_COUNT = 1;
 const INITIAL_WOOD_WALL_COUNT = 20;
 const INITIAL_WOOD_DOOR_COUNT = 1;
-const INITIAL_LADDER_COUNT = 1;
+const INITIAL_LADDER_COUNT = 10;
 const INITIAL_CHEST_SLOT_INDEX = 0;
 const INITIAL_WORKBENCH_SLOT_INDEX = 1;
 const INITIAL_WOOD_WALL_SLOT_INDEX = 2;

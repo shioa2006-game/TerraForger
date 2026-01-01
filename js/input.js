@@ -22,6 +22,9 @@ function handleMovementKeyDown() {
   if (key === "w" || key === "W" || key === " " || keyCode === UP_ARROW) {
     GameState.playerState.keyState.up = true;
   }
+  if (key === "s" || key === "S" || keyCode === DOWN_ARROW) {
+    GameState.playerState.keyState.down = true;
+  }
 }
 
 // 移動キーの解放を処理する
@@ -34,6 +37,9 @@ function handleMovementKeyUp() {
   }
   if (key === "w" || key === "W" || key === " " || keyCode === UP_ARROW) {
     GameState.playerState.keyState.up = false;
+  }
+  if (key === "s" || key === "S" || keyCode === DOWN_ARROW) {
+    GameState.playerState.keyState.down = false;
   }
 }
 

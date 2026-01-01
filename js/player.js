@@ -1,4 +1,22 @@
 ﻿// プレイヤー関連
+
+// プレイヤーが梯子の上にいるかを判定する
+function isPlayerOnLadder() {
+  const entity = GameState.playerState.entity;
+  const tileSize = GameState.worldState.tileSize;
+  const centerCol = floor(entity.x / tileSize);
+  const topRow = floor((entity.y - entity.h * 0.5) / tileSize);
+  const bottomRow = floor((entity.y + entity.h * 0.5 - 1) / tileSize);
+
+  for (let row = topRow; row <= bottomRow; row += 1) {
+    const placeable = getForegroundPlaceableAt(centerCol, row);
+    if (placeable && placeable.blockType === BlockType.LADDER) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function initPlayer() {
   const spawnCol = PLAYER_SPAWN_COL;
   let spawnRow = 0;
@@ -35,12 +53,28 @@ function updatePlayer() {
     }
   }
 
-  if (GameState.playerState.keyState.up && GameState.playerState.entity.onGround) {
-    GameState.playerState.entity.vy = -PLAYER_JUMP_POWER;
-    GameState.playerState.entity.onGround = false;
+  const onLadder = isPlayerOnLadder();
+
+  if (onLadder) {
+    // 梯子の上では上下キーで移動
+    if (GameState.playerState.keyState.up) {
+      GameState.playerState.entity.vy = -PLAYER_SPEED;
+    } else if (GameState.playerState.keyState.down) {
+      GameState.playerState.entity.vy = PLAYER_SPEED;
+    } else {
+      // キーを離したら停止
+      GameState.playerState.entity.vy = 0;
+    }
+  } else {
+    // 通常のジャンプ処理
+    if (GameState.playerState.keyState.up && GameState.playerState.entity.onGround) {
+      GameState.playerState.entity.vy = -PLAYER_JUMP_POWER;
+      GameState.playerState.entity.onGround = false;
+    }
+    // 梯子の上にいない場合は重力を適用
+    GameState.playerState.entity.vy += PLAYER_GRAVITY;
   }
 
-  GameState.playerState.entity.vy += PLAYER_GRAVITY;
   moveHorizontal();
   moveVertical();
 }
