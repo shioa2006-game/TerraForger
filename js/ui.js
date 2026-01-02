@@ -9,4 +9,5 @@ function initUI() {
   initEquipmentSlots();
   initInventoryGrid();
   initOverlayUI();
+  initLeftSidebar();
 }

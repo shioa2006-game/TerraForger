@@ -1,7 +1,8 @@
-﻿// 右カラムの描画更新
+﻿// サイドバーの描画更新
 
 function drawHud() {
   updateSidebarUI();
+  updateLeftSidebar();
 }
 
 // 右カラムのUIを更新する

@@ -349,6 +349,67 @@ canvas {
   color: #808590;
 }
 
+/* 左サイドバー - STATUS */
+.status-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #3a4050;
+}
+
+.status-item:last-child {
+  border-bottom: none;
+}
+
+.status-label {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.status-value {
+  color: var(--ink);
+}
+
+/* 左サイドバー - TIME */
+.time-display {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+}
+
+.time-period {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.time-period.day {
+  color: #f6d27a;
+}
+
+.time-period.night {
+  color: #7aa2f6;
+}
+
+/* 左サイドバー - GUIDE */
+.guide-text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #c0c5d2;
+}
+
 @media (max-width: 720px) {
   body {
     overflow-x: auto;

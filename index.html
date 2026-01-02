@@ -14,8 +14,25 @@
       </header>
       <section class="main-grid">
         <aside class="panel-box left-panel">
-          <h2 class="panel-title">クラフト</h2>
-          <p class="panel-note">準備中</p>
+          <section class="panel-section">
+            <h2 class="panel-title">STATUS</h2>
+            <ul class="status-list">
+              <li class="status-item"><span class="status-label">HP</span><span class="status-value" id="statusHp">-</span></li>
+              <li class="status-item"><span class="status-label">ATK</span><span class="status-value" id="statusAtk">-</span></li>
+              <li class="status-item"><span class="status-label">DEF</span><span class="status-value" id="statusDef">-</span></li>
+              <li class="status-item"><span class="status-label">FOOD</span><span class="status-value" id="statusFood">-</span></li>
+              <li class="status-item"><span class="status-label">GOLD</span><span class="status-value" id="statusGold">-</span></li>
+            </ul>
+          </section>
+          <section class="panel-section">
+            <h2 class="panel-title">TIME</h2>
+            <p class="time-display" id="gameTime">--:--</p>
+            <p class="time-period" id="timePeriod">-</p>
+          </section>
+          <section class="panel-section">
+            <h2 class="panel-title">GUIDE</h2>
+            <p class="guide-text" id="guideText">-</p>
+          </section>
         </aside>
         <div id="game" class="game-panel"></div>
         <aside class="panel-box right-panel">
@@ -69,6 +86,7 @@
     <script src="js/ui.js"></script>
     <script src="js/ui_icons.js"></script>
     <script src="js/ui_sidebar.js"></script>
+    <script src="js/ui_left_sidebar.js"></script>
     <script src="js/ui_chest.js"></script>
     <script src="js/ui_workbench.js"></script>
     <script src="js/ui_overlays.js"></script>
