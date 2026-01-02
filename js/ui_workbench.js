@@ -222,8 +222,13 @@ function craftSelectedRecipe(amount) {
 
 // アイテムがスロットに存在することを保証する
 function ensureItemInSlot(itemId) {
-  // 既にスロットにあれば何もしない
+  // 既にインベントリスロットにあれば何もしない
   if (findInventorySlotByItem(itemId) >= 0) {
+    return true;
+  }
+
+  // 装備スロットにあれば何もしない
+  if (findEquipmentSlotByItem(itemId) >= 0) {
     return true;
   }
 
@@ -243,6 +248,17 @@ function ensureItemInSlot(itemId) {
     itemId: itemId,
   };
   return true;
+}
+
+// 装備スロット内でアイテムIDのスロットを探す
+function findEquipmentSlotByItem(itemId) {
+  for (let i = 0; i < GameState.inventoryState.equipmentSlots.length; i += 1) {
+    const item = GameState.inventoryState.equipmentSlots[i];
+    if (item && isStackableItem(item) && item.itemId === itemId) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 // キーボードイベント処理
