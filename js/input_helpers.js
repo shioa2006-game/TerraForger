@@ -225,6 +225,9 @@ function tryRetrievePlaceableWithHammer(col, row) {
   if (!removed) {
     return false;
   }
+  if (removed.blockType === BlockType.ACORN) {
+    removeGrowingTree(removed.col, removed.row);
+  }
   addItemCount(placeableDef.itemId, 1);
   return true;
 }

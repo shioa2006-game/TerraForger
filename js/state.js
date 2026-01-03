@@ -23,12 +23,14 @@ const GameState = {
   worldObjects: {
     placeables: [],
     backgroundPlaceables: [],
+    growingTrees: [],
   },
   overlayState: {
     activePlaceable: null,
   },
   environment: {
     timeOfDay: 0,
+    lastTimeOfDay: 0,
     backgroundStars: [],
     clouds: [],
   },
@@ -199,6 +201,7 @@ const ItemId = {
   COAL: "coal",
   IRON: "iron",
   SAND: "sand",
+  ACORN: "acorn",
   WOOD_WALL: "woodWall",
   WOOD_DOOR: "woodDoor",
   LADDER: "ladder",
@@ -244,6 +247,7 @@ const BlockType = {
   WOOD_WALL: 11,
   WOOD_DOOR: 12,
   LADDER: 13,
+  ACORN: 14,
 };
 
 // ブロックの色定義
@@ -272,6 +276,7 @@ const BlockNames = {
   [BlockType.WOOD_WALL]: "木の壁",
   [BlockType.WOOD_DOOR]: "木の扉",
   [BlockType.LADDER]: "梯子",
+  [BlockType.ACORN]: "ドングリ",
 };
 
 // アイテム名（UI表示用）
@@ -284,6 +289,7 @@ const ItemNames = {
   [ItemId.COAL]: "石炭",
   [ItemId.IRON]: "鉄",
   [ItemId.SAND]: "砂",
+  [ItemId.ACORN]: "ドングリ",
   [ItemId.WOOD_WALL]: "木の壁",
   [ItemId.WOOD_DOOR]: "木の扉",
   [ItemId.LADDER]: "木の梯子",
@@ -356,6 +362,15 @@ const PlaceableDefs = {
     iconSprites: [{ dx: 0, dy: 0, index: 3 }],
     iconScale: 1,
   },
+  [BlockType.ACORN]: {
+    itemId: ItemId.ACORN,
+    layer: "foreground",
+    size: { w: 1, h: 1 },
+    origin: { x: 0, y: 0 },
+    sprites: [{ dx: 0, dy: 0, index: 6 }],
+    iconSprites: [{ dx: 0, dy: 0, index: 6 }],
+    iconScale: 1,
+  },
 };
 
 // アイテムの定義
@@ -368,6 +383,7 @@ const ItemDefs = {
   [ItemId.COAL]: { kind: ItemKind.BLOCK, iconIndex: 5, placeBlock: BlockType.COAL },
   [ItemId.IRON]: { kind: ItemKind.BLOCK, iconIndex: 6, placeBlock: BlockType.IRON },
   [ItemId.SAND]: { kind: ItemKind.BLOCK, iconIndex: 7, placeBlock: BlockType.SAND },
+  [ItemId.ACORN]: { kind: ItemKind.PLACEABLE, iconIndex: 6, placeableBlock: BlockType.ACORN },
   [ItemId.CHEST]: { kind: ItemKind.PLACEABLE, iconIndex: 4, placeableBlock: BlockType.CHEST },
   [ItemId.WORKBENCH]: { kind: ItemKind.PLACEABLE, iconIndex: 5, placeableBlock: BlockType.WORKBENCH },
   [ItemId.WOOD_WALL]: { kind: ItemKind.PLACEABLE, iconIndex: 0, placeableBlock: BlockType.WOOD_WALL },
@@ -409,6 +425,12 @@ const CraftingRecipes = [
     resultItemId: ItemId.WORKBENCH,
     resultCount: 1,
     materials: [{ itemId: ItemId.WOOD, count: 3 }],
+  },
+  {
+    name: "ドングリ",
+    resultItemId: ItemId.ACORN,
+    resultCount: 1,
+    materials: [{ itemId: ItemId.GRASS, count: 3 }],
   },
 ];
 

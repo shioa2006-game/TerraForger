@@ -17,6 +17,7 @@ function initWorld() {
 function initPlaceables() {
   GameState.worldObjects.placeables = [];
   GameState.worldObjects.backgroundPlaceables = [];
+  GameState.worldObjects.growingTrees = [];
 }
 
 // 設置物が占有するタイルを計算する
@@ -84,6 +85,9 @@ function addPlaceable(blockType, col, row) {
     placeable.storageCounts = {};
   }
   GameState.worldObjects.placeables.push(placeable);
+  if (blockType === BlockType.ACORN) {
+    registerGrowingTree(col, row);
+  }
 }
 
 // 前景設置物を取り除く
@@ -231,4 +235,248 @@ function isSolid(col, row) {
     return true;
   }
   return GameState.worldState.world[col][row] !== BlockType.AIR;
+}
+
+// 木の成長段階の定義
+const TreeGrowthStage = {
+  ACORN: 0,
+  SMALL: 1,
+  MEDIUM: 2,
+  LARGE: 3,
+};
+
+// 木の形状データ（上から下）
+const TreePatterns = {
+  [TreeGrowthStage.SMALL]: [
+    "LLL",
+    "LWL",
+    ".W.",
+  ],
+  [TreeGrowthStage.MEDIUM]: [
+    ".LLL.",
+    "LLWLL",
+    "LLWLL",
+    "..W..",
+    "..W..",
+  ],
+  [TreeGrowthStage.LARGE]: [
+    ".LLL.",
+    "LLLLL",
+    "LLWLL",
+    "LLWLL",
+    ".LWL.",
+    "..W..",
+    "..W..",
+    "..W..",
+  ],
+};
+
+// 成長管理リストにドングリを追加する
+function registerGrowingTree(col, row) {
+  GameState.worldObjects.growingTrees.push({ col, row, stage: TreeGrowthStage.ACORN });
+}
+
+// 成長管理リストから指定位置の木を除外する
+function removeGrowingTree(col, row) {
+  const list = GameState.worldObjects.growingTrees;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    if (list[i].col === col && list[i].row === row) {
+      list.splice(i, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+// 毎朝6:00に実行される成長処理
+function processDailyGrowth() {
+  growTreesDaily();
+  growGrassDaily();
+}
+
+// 木の成長判定と更新
+function growTreesDaily() {
+  const list = GameState.worldObjects.growingTrees;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const tree = list[i];
+    if (!isGrowingTreeValid(tree)) {
+      list.splice(i, 1);
+      continue;
+    }
+    if (!canTreeGrowToday(tree.col, tree.row)) {
+      continue;
+    }
+
+    if (tree.stage === TreeGrowthStage.ACORN) {
+      removeAcornPlaceable(tree.col, tree.row);
+      applyTreePattern(tree.col, tree.row, TreePatterns[TreeGrowthStage.SMALL]);
+      tree.stage = TreeGrowthStage.SMALL;
+      continue;
+    }
+
+    if (tree.stage === TreeGrowthStage.SMALL) {
+      clearTreePattern(tree.col, tree.row, TreePatterns[TreeGrowthStage.SMALL]);
+      applyTreePattern(tree.col, tree.row, TreePatterns[TreeGrowthStage.MEDIUM]);
+      tree.stage = TreeGrowthStage.MEDIUM;
+      continue;
+    }
+
+    if (tree.stage === TreeGrowthStage.MEDIUM) {
+      clearTreePattern(tree.col, tree.row, TreePatterns[TreeGrowthStage.MEDIUM]);
+      applyTreePattern(tree.col, tree.row, TreePatterns[TreeGrowthStage.LARGE]);
+      tree.stage = TreeGrowthStage.LARGE;
+      list.splice(i, 1);
+    }
+  }
+}
+
+// 草の成長判定と更新
+function growGrassDaily() {
+  for (let col = 0; col < GameState.worldState.worldCols; col += 1) {
+    const topRow = findTopSolidRow(col);
+    if (topRow < 0 || topRow >= SKY_LIMIT_ROW) {
+      continue;
+    }
+    if (GameState.worldState.world[col][topRow] !== BlockType.DIRT) {
+      continue;
+    }
+    if (!isTopSurfaceClear(col, topRow)) {
+      continue;
+    }
+    GameState.worldState.world[col][topRow] = BlockType.GRASS;
+  }
+}
+
+// 指定列の最上位ブロックを探す
+function findTopSolidRow(col) {
+  for (let row = 0; row < GameState.worldState.worldRows; row += 1) {
+    if (GameState.worldState.world[col][row] !== BlockType.AIR) {
+      return row;
+    }
+  }
+  return -1;
+}
+
+// 地表が空いているか確認する
+function isTopSurfaceClear(col, row) {
+  const aboveRow = row - 1;
+  if (aboveRow < 0) {
+    return true;
+  }
+  if (GameState.worldState.world[col][aboveRow] !== BlockType.AIR) {
+    return false;
+  }
+  if (isPlaceableOccupied(col, aboveRow)) {
+    return false;
+  }
+  if (isWoodWallOccupied(col, aboveRow)) {
+    return false;
+  }
+  return true;
+}
+
+// 成長対象が存在しているか確認する
+function isGrowingTreeValid(tree) {
+  if (!isInsideWorld(tree.col, tree.row)) {
+    return false;
+  }
+  if (tree.stage === TreeGrowthStage.ACORN) {
+    const placeable = getForegroundPlaceableAt(tree.col, tree.row);
+    return Boolean(placeable && placeable.blockType === BlockType.ACORN);
+  }
+  return GameState.worldState.world[tree.col][tree.row] === BlockType.WOOD;
+}
+
+// 草の上に設置されているか確認する
+function canTreeGrowToday(col, row) {
+  if (row >= SKY_LIMIT_ROW) {
+    return false;
+  }
+  const belowRow = row + 1;
+  if (!isInsideWorld(col, belowRow)) {
+    return false;
+  }
+  return GameState.worldState.world[col][belowRow] === BlockType.GRASS;
+}
+
+// ドングリを取り除く
+function removeAcornPlaceable(col, row) {
+  const placeable = getForegroundPlaceableAt(col, row);
+  if (!placeable || placeable.blockType !== BlockType.ACORN) {
+    return false;
+  }
+  removeForegroundPlaceableAt(col, row);
+  return true;
+}
+
+// 木の形状に沿ってブロックを配置する
+function applyTreePattern(baseCol, baseRow, pattern) {
+  const height = pattern.length;
+  const width = pattern[0].length;
+  const originCol = baseCol - Math.floor(width / 2);
+  const originRow = baseRow - (height - 1);
+
+  for (let y = 0; y < height; y += 1) {
+    const rowStr = pattern[y];
+    for (let x = 0; x < width; x += 1) {
+      const cell = rowStr[x];
+      if (cell === ".") {
+        continue;
+      }
+      const col = originCol + x;
+      const row = originRow + y;
+      if (!isInsideWorld(col, row)) {
+        continue;
+      }
+      if (isTreePlacementBlocked(col, row)) {
+        continue;
+      }
+      if (cell === "W") {
+        GameState.worldState.world[col][row] = BlockType.WOOD;
+      } else if (cell === "L") {
+        GameState.worldState.world[col][row] = BlockType.LEAVES;
+      }
+    }
+  }
+}
+
+// 木の旧パターンだけを消去する
+function clearTreePattern(baseCol, baseRow, pattern) {
+  const height = pattern.length;
+  const width = pattern[0].length;
+  const originCol = baseCol - Math.floor(width / 2);
+  const originRow = baseRow - (height - 1);
+
+  for (let y = 0; y < height; y += 1) {
+    const rowStr = pattern[y];
+    for (let x = 0; x < width; x += 1) {
+      const cell = rowStr[x];
+      if (cell === ".") {
+        continue;
+      }
+      const col = originCol + x;
+      const row = originRow + y;
+      if (!isInsideWorld(col, row)) {
+        continue;
+      }
+      const blockType = GameState.worldState.world[col][row];
+      if (blockType === BlockType.WOOD || blockType === BlockType.LEAVES) {
+        GameState.worldState.world[col][row] = BlockType.AIR;
+      }
+    }
+  }
+}
+
+// 木の生成位置が干渉するか確認する
+function isTreePlacementBlocked(col, row) {
+  if (GameState.worldState.world[col][row] !== BlockType.AIR) {
+    return true;
+  }
+  if (isPlaceableOccupied(col, row)) {
+    return true;
+  }
+  if (isWoodWallOccupied(col, row)) {
+    return true;
+  }
+  return false;
 }

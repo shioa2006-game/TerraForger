@@ -18,10 +18,16 @@ function setup() {
   initInventory();
   initUI();
   initBackground();
+  GameState.environment.lastTimeOfDay = GameState.environment.timeOfDay;
 }
 
 function draw() {
+  const prevTime = GameState.environment.lastTimeOfDay;
   GameState.environment.timeOfDay = (GameState.environment.timeOfDay + TIME_OF_DAY_SPEED) % 1;
+  if (GameState.environment.timeOfDay < prevTime) {
+    processDailyGrowth();
+  }
+  GameState.environment.lastTimeOfDay = GameState.environment.timeOfDay;
   drawBackground();
   updatePlayer();
   updateParticles();

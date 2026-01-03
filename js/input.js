@@ -99,6 +99,7 @@ function resetWorldState() {
   initInventory();
   initBackground();
   GameState.effects.particles = [];
+  GameState.environment.lastTimeOfDay = GameState.environment.timeOfDay;
 }
 
 function mousePressed() {

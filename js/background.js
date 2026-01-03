@@ -25,7 +25,7 @@ function initBackground() {
 function drawBackground() {
   const skyLimitY = SKY_LIMIT_ROW * GameState.worldState.tileSize;
   const skyLimitScreenY = skyLimitY - GameState.camera.pos.y;
-  const dayProgress = sin(GameState.environment.timeOfDay * TWO_PI) * 0.5 + 0.5;
+  const dayProgress = getDayProgressFromTime();
   const skyTop = lerpColor(color(12, 12, 40), color(140, 210, 235), dayProgress);
   const skyBottom = lerpColor(color(30, 24, 60), color(255, 210, 170), dayProgress);
 
@@ -36,10 +36,47 @@ function drawBackground() {
     line(0, y, width, y);
   }
 
-  drawCaveBackground(skyEnd);
   drawStars(dayProgress, skyEnd);
   drawSunAndMoon(dayProgress, skyEnd);
   drawClouds(dayProgress, skyEnd);
+  drawCaveBackground(skyEnd);
+}
+
+// 6:00を基準に明るさの進行度を計算する
+function getDayProgressFromTime() {
+  const timeOfDay = GameState.environment.timeOfDay;
+  const dayStart = 0; // 6:00
+  const dayPeakStart = 0.375; // 15:00
+  const dayEnd = 0.5; // 18:00
+  const eveningEnd = 0.625; // 21:00
+  const dawnStart = 0.875; // 3:00
+  const dawnEnd = 1; // 6:00
+  const sunsetFloor = 0.38;
+  const dawnCeiling = 0.55;
+
+  if (timeOfDay >= dayStart && timeOfDay < dayPeakStart) {
+    return 1;
+  }
+  if (timeOfDay >= dayPeakStart && timeOfDay < dayEnd) {
+    const t = (timeOfDay - dayPeakStart) / (dayEnd - dayPeakStart);
+    const eased = t * t;
+    return 1 - eased * (1 - sunsetFloor);
+  }
+  if (timeOfDay >= dayEnd && timeOfDay < eveningEnd) {
+    const t = (timeOfDay - dayEnd) / (eveningEnd - dayEnd);
+    const eased = t * t;
+    return sunsetFloor * (1 - eased);
+  }
+  if (timeOfDay >= eveningEnd && timeOfDay < dawnStart) {
+    return 0;
+  }
+  // 3:00-6:00は徐々に明るくする
+  if (timeOfDay >= dawnStart && timeOfDay < dawnEnd) {
+    const t = (timeOfDay - dawnStart) / (dawnEnd - dawnStart);
+    const eased = t * t;
+    return eased * dawnCeiling;
+  }
+  return 0;
 }
 
 // 地下の暗い壁を描く
@@ -79,19 +116,24 @@ function drawStars(dayProgress, skyLimitY) {
 
 // 太陽と月を描く
 function drawSunAndMoon(dayProgress, skyLimitY) {
-  const orbitY = map(dayProgress, 0, 1, skyLimitY + SUN_ORBIT_MARGIN, -SUN_ORBIT_MARGIN);
   const orbitX = width * SUN_ORBIT_X;
+  const timeOfDay = GameState.environment.timeOfDay;
 
-  if (dayProgress > SUN_DAY_START) {
+  // 6:00（timeOfDay=0）に日の出、18:00（timeOfDay=0.5）に日没
+  if (timeOfDay <= 0.5) {
+    const dayPhase = timeOfDay / 0.5;
+    const orbitY = lerp(skyLimitY, -SUN_ORBIT_MARGIN, sin(dayPhase * PI));
     noStroke();
     fill(255, 220, 120);
     ellipse(orbitX, orbitY, SUN_SIZE, SUN_SIZE);
     fill(255, 220, 120, 120);
     ellipse(orbitX, orbitY, SUN_GLOW_SIZE, SUN_GLOW_SIZE);
   } else {
+    const nightPhase = (timeOfDay - 0.5) / 0.5;
+    const orbitY = lerp(skyLimitY, -SUN_ORBIT_MARGIN, sin(nightPhase * PI));
     noStroke();
     fill(230, 230, 250);
-    ellipse(orbitX, skyLimitY - orbitY, MOON_SIZE, MOON_SIZE);
+    ellipse(orbitX, orbitY, MOON_SIZE, MOON_SIZE);
   }
 }
 
