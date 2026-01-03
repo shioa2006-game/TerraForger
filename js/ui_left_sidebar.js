@@ -39,11 +39,29 @@ function formatGameTime(hour, minute) {
   return hourStr + ":" + minuteStr;
 }
 
-// 昼夜判定
-// 昼: 6:00〜17:50 (hour 6-17)
-// 夜: 18:00〜5:50 (hour 18-23, 0-5)
-function isDaytime(hour) {
-  return hour >= 6 && hour < 18;
+// 時間帯の定義（8段階、3時間ごと）
+const TIME_PERIODS = [
+  { start: 6, name: "Morning", isDay: true },
+  { start: 9, name: "Forenoon", isDay: true },
+  { start: 12, name: "Afternoon", isDay: true },
+  { start: 15, name: "Dusk", isDay: true },
+  { start: 18, name: "Evening", isDay: false },
+  { start: 21, name: "Night", isDay: false },
+  { start: 0, name: "Midnight", isDay: false },
+  { start: 3, name: "Dawn", isDay: false },
+];
+
+// 時刻から時間帯を取得
+function getTimePeriod(hour) {
+  // 時間帯を逆順でチェック（大きい時刻から）
+  if (hour >= 21) return TIME_PERIODS[5]; // Night
+  if (hour >= 18) return TIME_PERIODS[4]; // Evening
+  if (hour >= 15) return TIME_PERIODS[3]; // Dusk
+  if (hour >= 12) return TIME_PERIODS[2]; // Afternoon
+  if (hour >= 9) return TIME_PERIODS[1];  // Forenoon
+  if (hour >= 6) return TIME_PERIODS[0];  // Morning
+  if (hour >= 3) return TIME_PERIODS[7];  // Dawn
+  return TIME_PERIODS[6];                  // Midnight
 }
 
 // 左サイドバーの時間表示を更新
@@ -58,10 +76,10 @@ function updateLeftSidebarTime() {
   // 時刻表示を更新
   leftSidebarElements.gameTime.textContent = formatGameTime(hour, minute);
 
-  // 昼夜表示を更新
-  const isDay = isDaytime(hour);
-  leftSidebarElements.timePeriod.textContent = isDay ? "Day" : "Night";
-  leftSidebarElements.timePeriod.className = "time-period " + (isDay ? "day" : "night");
+  // 時間帯表示を更新
+  const period = getTimePeriod(hour);
+  leftSidebarElements.timePeriod.textContent = period.name;
+  leftSidebarElements.timePeriod.className = "time-period " + (period.isDay ? "day" : "night");
 }
 
 // 左サイドバー全体の更新

@@ -378,19 +378,20 @@ canvas {
 }
 
 /* 左サイドバー - TIME */
-.time-display {
+.time-row {
   margin: 0;
+  text-align: center;
+}
+
+.time-display {
   font-size: 0.95rem;
   font-weight: 700;
-  text-align: center;
   color: var(--ink);
   letter-spacing: 0.05em;
 }
 
 .time-period {
-  margin: 4px 0 0;
   font-size: 0.85rem;
-  text-align: center;
   font-weight: 600;
 }
 
