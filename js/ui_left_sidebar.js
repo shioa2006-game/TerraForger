@@ -60,7 +60,7 @@ function updateLeftSidebarTime() {
 
   // 昼夜表示を更新
   const isDay = isDaytime(hour);
-  leftSidebarElements.timePeriod.textContent = isDay ? "昼" : "夜";
+  leftSidebarElements.timePeriod.textContent = isDay ? "Day" : "Night";
   leftSidebarElements.timePeriod.className = "time-period " + (isDay ? "day" : "night");
 }
 

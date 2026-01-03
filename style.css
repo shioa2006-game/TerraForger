@@ -380,7 +380,7 @@ canvas {
 /* 左サイドバー - TIME */
 .time-display {
   margin: 0;
-  font-size: 2rem;
+  font-size: 0.95rem;
   font-weight: 700;
   text-align: center;
   color: var(--ink);
