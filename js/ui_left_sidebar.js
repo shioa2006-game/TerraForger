@@ -44,7 +44,7 @@ const TIME_PERIODS = [
   { start: 6, name: "Morning", isDay: true },
   { start: 9, name: "Forenoon", isDay: true },
   { start: 12, name: "Afternoon", isDay: true },
-  { start: 15, name: "Dusk", isDay: true },
+  { start: 15, name: "Sunset", isDay: true },
   { start: 18, name: "Evening", isDay: false },
   { start: 21, name: "Night", isDay: false },
   { start: 0, name: "Midnight", isDay: false },
@@ -56,7 +56,7 @@ function getTimePeriod(hour) {
   // 時間帯を逆順でチェック（大きい時刻から）
   if (hour >= 21) return TIME_PERIODS[5]; // Night
   if (hour >= 18) return TIME_PERIODS[4]; // Evening
-  if (hour >= 15) return TIME_PERIODS[3]; // Dusk
+  if (hour >= 15) return TIME_PERIODS[3]; // Sunset
   if (hour >= 12) return TIME_PERIODS[2]; // Afternoon
   if (hour >= 9) return TIME_PERIODS[1];  // Forenoon
   if (hour >= 6) return TIME_PERIODS[0];  // Morning
