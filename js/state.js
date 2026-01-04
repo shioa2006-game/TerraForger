@@ -13,6 +13,10 @@ const GameState = {
     selectedEquipIndex: 0,
     pickaxeSwing: 0,
     pickaxeSwingDir: 1,
+    hp: 100,
+    maxHp: 100,
+    invincibleTime: 0,
+    knockbackVx: 0,
   },
   camera: { pos: { x: 0, y: 0 } },
   inventoryState: {
@@ -69,6 +73,10 @@ const PLAYER_GRAVITY = 0.32;
 const PLAYER_JUMP_POWER = 5.2;
 const PLAYER_FRICTION = 0.8;
 const PLAYER_STOP_THRESHOLD = 0.05;
+const PLAYER_MAX_HP = 100;
+const PLAYER_INVINCIBLE_DURATION = 60;
+const PLAYER_KNOCKBACK_SPEED = 4.0;
+const PLAYER_KNOCKBACK_FRICTION = 0.85;
 const PARTICLE_GRAVITY = 0.15;
 const PARTICLE_COUNT = 8;
 const PARTICLE_VX_MIN = -1.8;

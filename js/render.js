@@ -176,6 +176,13 @@ function drawPlayer() {
     return;
   }
 
+  // 無敵時間中は点滅（4フレームごとに表示/非表示）
+  if (GameState.playerState.invincibleTime > 0) {
+    if (floor(frameCount / 4) % 2 === 0) {
+      return;
+    }
+  }
+
   const sprite = GameState.playerSprite;
   const dir = GameState.playerState.entity.dir >= 0 ? PLAYER_DIR_RIGHT : PLAYER_DIR_LEFT;
   const headIndex = PLAYER_HEAD_INDEX;
