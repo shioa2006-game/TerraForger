@@ -14,6 +14,7 @@ const EnemySpriteIndex = {
 
 // 敵のサイズ
 const ENEMY_SIZE = 36;
+const ENEMY_SPRITE_PADDING = 6;
 
 // 敵を初期化する（地表にスライム1体、ウサギ1体を配置）
 function initEnemies() {
@@ -67,10 +68,12 @@ function findSurfaceRow(col) {
 // 敵を描画する
 function drawEnemies() {
   const tileSize = GameState.worldState.tileSize;
+  const stride = tileSize + ENEMY_SPRITE_PADDING;
 
   for (const enemy of GameState.enemies) {
     const spriteIndices = EnemySpriteIndex[enemy.type];
     const spriteIndex = spriteIndices[enemy.animFrame];
+    const srcX = spriteIndex * stride;
 
     push();
     translate(enemy.x, enemy.y);
@@ -87,7 +90,7 @@ function drawEnemies() {
       0,
       tileSize,
       tileSize,
-      spriteIndex * tileSize,
+      srcX,
       0,
       tileSize,
       tileSize
