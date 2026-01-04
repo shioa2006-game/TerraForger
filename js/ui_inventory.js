@@ -14,6 +14,8 @@ function initInventoryData() {
   GameState.inventoryState.inventory[ItemId.WOOD_WALL] = INITIAL_WOOD_WALL_COUNT;
   GameState.inventoryState.inventory[ItemId.WOOD_DOOR] = INITIAL_WOOD_DOOR_COUNT;
   GameState.inventoryState.inventory[ItemId.LADDER] = INITIAL_LADDER_COUNT;
+  GameState.inventoryState.inventory[ItemId.RAW_MEAT] = INITIAL_RAW_MEAT_COUNT;
+  GameState.inventoryState.inventory[ItemId.OIL] = INITIAL_OIL_COUNT;
 }
 
 // 所持スロットを初期化する
@@ -34,6 +36,14 @@ function initInventorySlots() {
     itemId: ItemId.WOOD_DOOR,
   };
   GameState.inventoryState.inventorySlots[INITIAL_LADDER_SLOT_INDEX] = { kind: ItemKind.PLACEABLE, itemId: ItemId.LADDER };
+  GameState.inventoryState.inventorySlots[INITIAL_RAW_MEAT_SLOT_INDEX] = {
+    kind: ItemKind.MATERIAL,
+    itemId: ItemId.RAW_MEAT,
+  };
+  GameState.inventoryState.inventorySlots[INITIAL_OIL_SLOT_INDEX] = {
+    kind: ItemKind.MATERIAL,
+    itemId: ItemId.OIL,
+  };
 }
 
 // 装備スロットの初期データを設定する

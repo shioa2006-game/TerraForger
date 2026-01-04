@@ -175,11 +175,15 @@ const INITIAL_WORKBENCH_COUNT = 1;
 const INITIAL_WOOD_WALL_COUNT = 20;
 const INITIAL_WOOD_DOOR_COUNT = 1;
 const INITIAL_LADDER_COUNT = 10;
+const INITIAL_RAW_MEAT_COUNT = 5;
+const INITIAL_OIL_COUNT = 5;
 const INITIAL_CHEST_SLOT_INDEX = 0;
 const INITIAL_WORKBENCH_SLOT_INDEX = 1;
 const INITIAL_WOOD_WALL_SLOT_INDEX = 2;
 const INITIAL_WOOD_DOOR_SLOT_INDEX = 3;
 const INITIAL_LADDER_SLOT_INDEX = 4;
+const INITIAL_RAW_MEAT_SLOT_INDEX = 5;
+const INITIAL_OIL_SLOT_INDEX = 6;
 // 入力・操作の調整用定数
 const REACH_DISTANCE_SCALE = 0.5;
 const TOOL_TARGET_ROW_OFFSETS = [1, 1, 0, -1, -2, -2];
@@ -189,6 +193,7 @@ const ItemKind = {
   BLOCK: "block",
   TOOL: "tool",
   PLACEABLE: "placeable",
+  MATERIAL: "material",
 };
 
 // アイテムID
@@ -201,6 +206,8 @@ const ItemId = {
   COAL: "coal",
   IRON: "iron",
   SAND: "sand",
+  RAW_MEAT: "rawMeat",
+  OIL: "oil",
   ACORN: "acorn",
   WOOD_WALL: "woodWall",
   WOOD_DOOR: "woodDoor",
@@ -289,6 +296,8 @@ const ItemNames = {
   [ItemId.COAL]: "石炭",
   [ItemId.IRON]: "鉄",
   [ItemId.SAND]: "砂",
+  [ItemId.RAW_MEAT]: "生肉",
+  [ItemId.OIL]: "油",
   [ItemId.ACORN]: "ドングリ",
   [ItemId.WOOD_WALL]: "木の壁",
   [ItemId.WOOD_DOOR]: "木の扉",
@@ -383,6 +392,8 @@ const ItemDefs = {
   [ItemId.COAL]: { kind: ItemKind.BLOCK, iconIndex: 5, placeBlock: BlockType.COAL },
   [ItemId.IRON]: { kind: ItemKind.BLOCK, iconIndex: 6, placeBlock: BlockType.IRON },
   [ItemId.SAND]: { kind: ItemKind.BLOCK, iconIndex: 7, placeBlock: BlockType.SAND },
+  [ItemId.RAW_MEAT]: { kind: ItemKind.MATERIAL, iconIndex: 8 },
+  [ItemId.OIL]: { kind: ItemKind.MATERIAL, iconIndex: 9 },
   [ItemId.ACORN]: { kind: ItemKind.PLACEABLE, iconIndex: 6, placeableBlock: BlockType.ACORN },
   [ItemId.CHEST]: { kind: ItemKind.PLACEABLE, iconIndex: 4, placeableBlock: BlockType.CHEST },
   [ItemId.WORKBENCH]: { kind: ItemKind.PLACEABLE, iconIndex: 5, placeableBlock: BlockType.WORKBENCH },
@@ -451,7 +462,7 @@ function getItemDef(itemId) {
 
 // スタック可能アイテムか判定する
 function isStackableItem(item) {
-  return item && (item.kind === ItemKind.BLOCK || item.kind === ItemKind.PLACEABLE);
+  return item && (item.kind === ItemKind.BLOCK || item.kind === ItemKind.PLACEABLE || item.kind === ItemKind.MATERIAL);
 }
 
 // 所持数を取得する

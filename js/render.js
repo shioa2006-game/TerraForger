@@ -10,8 +10,16 @@ const ITEM_FRAME_SIZE = 36;
 const ITEM_SPRITE_GAP = 6;
 const DROP_FRAME_SIZE = 36;
 const DROP_SPRITE_GAP = 6;
+const DROP_SPRITE_COLUMNS = 8;
 const PLACEABLE_FRAME_SIZE = 36;
 const PLACEABLE_SPRITE_GAP = 6;
+function getDropSpriteCoords(iconIndex) {
+  const col = iconIndex % DROP_SPRITE_COLUMNS;
+  const row = floor(iconIndex / DROP_SPRITE_COLUMNS);
+  const stride = DROP_FRAME_SIZE + DROP_SPRITE_GAP;
+  return { srcX: col * stride, srcY: row * stride };
+}
+
 function drawWorld() {
   const startCol = max(0, floor(GameState.camera.pos.x / GameState.worldState.tileSize) - RENDER_VIEW_MARGIN);
   const endCol = min(
@@ -102,7 +110,7 @@ function drawDrops() {
     }
     const drawLeft = drop.x - GameState.worldState.tileSize * 0.5;
     const drawTop = drop.y - GameState.worldState.tileSize * 0.5;
-    const srcX = itemDef.iconIndex * (DROP_FRAME_SIZE + DROP_SPRITE_GAP);
+    const coords = getDropSpriteCoords(itemDef.iconIndex);
     imageMode(CORNER);
     image(
       GameState.dropSprite,
@@ -110,8 +118,8 @@ function drawDrops() {
       drawTop,
       GameState.worldState.tileSize,
       GameState.worldState.tileSize,
-      srcX,
-      0,
+      coords.srcX,
+      coords.srcY,
       DROP_FRAME_SIZE,
       DROP_FRAME_SIZE
     );

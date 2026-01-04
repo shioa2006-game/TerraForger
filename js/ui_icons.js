@@ -2,7 +2,15 @@
 const ITEM_ICON_SIZE = 36;
 const ITEM_ICON_GAP = 6;
 const DROP_ICON_GAP = 6;
+const DROP_ICON_COLUMNS = 8;
 const PLACEABLE_SHEET_WIDTH = ITEM_ICON_SIZE * 8 + ITEM_ICON_GAP * 7;
+
+function getDropIconPosition(iconIndex) {
+  const col = iconIndex % DROP_ICON_COLUMNS;
+  const row = Math.floor(iconIndex / DROP_ICON_COLUMNS);
+  const stride = ITEM_ICON_SIZE + DROP_ICON_GAP;
+  return { x: col * stride, y: row * stride };
+}
 
 // ツール用のアイコン表示を統一する
 function setToolSlotIcon(icon, toolType) {
@@ -40,10 +48,10 @@ function setItemSlotIcon(icon, itemId) {
     return;
   }
 
-  if (itemDef.kind === ItemKind.BLOCK) {
-    const srcX = itemDef.iconIndex * (ITEM_ICON_SIZE + DROP_ICON_GAP);
+  if (itemDef.kind === ItemKind.BLOCK || itemDef.kind === ItemKind.MATERIAL) {
+    const pos = getDropIconPosition(itemDef.iconIndex);
     icon.style.backgroundImage = "url('assets/drops.png')";
-    icon.style.backgroundPosition = `-${srcX}px 0px`;
+    icon.style.backgroundPosition = `-${pos.x}px -${pos.y}px`;
     icon.style.backgroundSize = "";
     icon.style.backgroundRepeat = "no-repeat";
     icon.style.backgroundColor = "transparent";
