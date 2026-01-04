@@ -16,6 +16,7 @@ function initInventoryData() {
   GameState.inventoryState.inventory[ItemId.LADDER] = INITIAL_LADDER_COUNT;
   GameState.inventoryState.inventory[ItemId.RAW_MEAT] = INITIAL_RAW_MEAT_COUNT;
   GameState.inventoryState.inventory[ItemId.OIL] = INITIAL_OIL_COUNT;
+  GameState.inventoryState.inventory[ItemId.ARROW] = INITIAL_ARROW_COUNT;
 }
 
 // 所持スロットを初期化する
@@ -44,6 +45,10 @@ function initInventorySlots() {
     kind: ItemKind.MATERIAL,
     itemId: ItemId.OIL,
   };
+  GameState.inventoryState.inventorySlots[INITIAL_ARROW_SLOT_INDEX] = {
+    kind: ItemKind.MATERIAL,
+    itemId: ItemId.ARROW,
+  };
 }
 
 // 装備スロットの初期データを設定する
@@ -53,6 +58,6 @@ function initEquipmentSlotsData() {
     { kind: ItemKind.TOOL, tool: ToolType.AXE },
     { kind: ItemKind.TOOL, tool: ToolType.HAMMER },
     { kind: ItemKind.TOOL, tool: ToolType.SWORD },
-    null,
+    { kind: ItemKind.TOOL, tool: ToolType.BOW },
   ];
 }

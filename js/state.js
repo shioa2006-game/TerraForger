@@ -42,6 +42,8 @@ const GameState = {
   itemSprite: null,
   dropSprite: null,
   placeableSprite: null,
+  enemySprite: null,
+  enemies: [],
 };
 
 // ゲーム挙動の調整用定数
@@ -177,6 +179,7 @@ const INITIAL_WOOD_DOOR_COUNT = 1;
 const INITIAL_LADDER_COUNT = 10;
 const INITIAL_RAW_MEAT_COUNT = 5;
 const INITIAL_OIL_COUNT = 5;
+const INITIAL_ARROW_COUNT = 20;
 const INITIAL_CHEST_SLOT_INDEX = 0;
 const INITIAL_WORKBENCH_SLOT_INDEX = 1;
 const INITIAL_WOOD_WALL_SLOT_INDEX = 2;
@@ -184,6 +187,7 @@ const INITIAL_WOOD_DOOR_SLOT_INDEX = 3;
 const INITIAL_LADDER_SLOT_INDEX = 4;
 const INITIAL_RAW_MEAT_SLOT_INDEX = 5;
 const INITIAL_OIL_SLOT_INDEX = 6;
+const INITIAL_ARROW_SLOT_INDEX = 7;
 // 入力・操作の調整用定数
 const REACH_DISTANCE_SCALE = 0.5;
 const TOOL_TARGET_ROW_OFFSETS = [1, 1, 0, -1, -2, -2];
@@ -209,6 +213,7 @@ const ItemId = {
   RAW_MEAT: "rawMeat",
   OIL: "oil",
   ACORN: "acorn",
+  ARROW: "arrow",
   WOOD_WALL: "woodWall",
   WOOD_DOOR: "woodDoor",
   LADDER: "ladder",
@@ -222,6 +227,7 @@ const ToolType = {
   AXE: "axe",
   HAMMER: "hammer",
   SWORD: "sword",
+  BOW: "bow",
 };
 
 // ツールのスプライトインデックスを取得する
@@ -234,6 +240,12 @@ function getToolSpriteIndex(toolType) {
   }
   if (toolType === ToolType.HAMMER) {
     return 2;
+  }
+  if (toolType === ToolType.SWORD) {
+    return 3;
+  }
+  if (toolType === ToolType.BOW) {
+    return 4;
   }
   return 3;
 }
@@ -299,6 +311,7 @@ const ItemNames = {
   [ItemId.RAW_MEAT]: "生肉",
   [ItemId.OIL]: "油",
   [ItemId.ACORN]: "ドングリ",
+  [ItemId.ARROW]: "矢",
   [ItemId.WOOD_WALL]: "木の壁",
   [ItemId.WOOD_DOOR]: "木の扉",
   [ItemId.LADDER]: "木の梯子",
@@ -394,6 +407,7 @@ const ItemDefs = {
   [ItemId.SAND]: { kind: ItemKind.BLOCK, iconIndex: 7, placeBlock: BlockType.SAND },
   [ItemId.RAW_MEAT]: { kind: ItemKind.MATERIAL, iconIndex: 8 },
   [ItemId.OIL]: { kind: ItemKind.MATERIAL, iconIndex: 9 },
+  [ItemId.ARROW]: { kind: ItemKind.MATERIAL, iconIndex: 5, spriteSource: "items" },
   [ItemId.ACORN]: { kind: ItemKind.PLACEABLE, iconIndex: 6, placeableBlock: BlockType.ACORN },
   [ItemId.CHEST]: { kind: ItemKind.PLACEABLE, iconIndex: 4, placeableBlock: BlockType.CHEST },
   [ItemId.WORKBENCH]: { kind: ItemKind.PLACEABLE, iconIndex: 5, placeableBlock: BlockType.WORKBENCH },

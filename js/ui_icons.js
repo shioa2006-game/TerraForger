@@ -49,6 +49,15 @@ function setItemSlotIcon(icon, itemId) {
   }
 
   if (itemDef.kind === ItemKind.BLOCK || itemDef.kind === ItemKind.MATERIAL) {
+    if (itemDef.spriteSource === "items") {
+      // items.pngからアイコンを取得
+      icon.style.backgroundImage = "url('assets/items.png')";
+      icon.style.backgroundPosition = `-${itemDef.iconIndex * (ITEM_ICON_SIZE + ITEM_ICON_GAP)}px 0px`;
+      icon.style.backgroundSize = "";
+      icon.style.backgroundRepeat = "no-repeat";
+      icon.style.backgroundColor = "transparent";
+      return;
+    }
     const pos = getDropIconPosition(itemDef.iconIndex);
     icon.style.backgroundImage = "url('assets/drops.png')";
     icon.style.backgroundPosition = `-${pos.x}px -${pos.y}px`;
