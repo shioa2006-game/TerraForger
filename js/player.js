@@ -37,10 +37,28 @@ function initPlayer() {
     onGround: false,
     dir: 1,
   };
+
+  // 戦闘ステータス初期化
+  GameState.playerState.hp = PLAYER_MAX_HP;
+  GameState.playerState.maxHp = PLAYER_MAX_HP;
+  GameState.playerState.invincibleTime = 0;
+  GameState.playerState.knockbackVx = 0;
 }
 
 function updatePlayer() {
-  if (GameState.playerState.keyState.left) {
+  // 無敵時間の更新
+  if (GameState.playerState.invincibleTime > 0) {
+    GameState.playerState.invincibleTime -= 1;
+  }
+
+  // ノックバック中は移動入力を無視
+  if (GameState.playerState.knockbackVx !== 0) {
+    GameState.playerState.entity.vx = GameState.playerState.knockbackVx;
+    GameState.playerState.knockbackVx *= PLAYER_KNOCKBACK_FRICTION;
+    if (abs(GameState.playerState.knockbackVx) < PLAYER_STOP_THRESHOLD) {
+      GameState.playerState.knockbackVx = 0;
+    }
+  } else if (GameState.playerState.keyState.left) {
     GameState.playerState.entity.vx = -PLAYER_SPEED;
     GameState.playerState.entity.dir = -1;
   } else if (GameState.playerState.keyState.right) {
@@ -77,6 +95,9 @@ function updatePlayer() {
 
   moveHorizontal();
   moveVertical();
+
+  // 敵との接触判定
+  checkEnemyCollision();
 }
 
 function moveHorizontal() {
@@ -141,4 +162,73 @@ function moveVertical() {
   }
 
   GameState.playerState.entity.y = nextY;
+}
+
+// 敵との接触判定
+function checkEnemyCollision() {
+  // 無敵時間中はダメージを受けない
+  if (GameState.playerState.invincibleTime > 0) {
+    return;
+  }
+
+  const player = GameState.playerState.entity;
+  const playerLeft = player.x - player.w * 0.5;
+  const playerRight = player.x + player.w * 0.5;
+  const playerTop = player.y - player.h * 0.5;
+  const playerBottom = player.y + player.h * 0.5;
+
+  for (const enemy of GameState.enemies) {
+    if (enemy.state !== EnemyState.ALIVE) {
+      continue;
+    }
+
+    const def = EnemyDefs[enemy.type];
+    if (def.attack <= 0) {
+      continue;
+    }
+
+    const enemyLeft = enemy.x - enemy.w * 0.5;
+    const enemyRight = enemy.x + enemy.w * 0.5;
+    const enemyTop = enemy.y - enemy.h * 0.5;
+    const enemyBottom = enemy.y + enemy.h * 0.5;
+
+    // AABB衝突判定
+    if (
+      playerLeft < enemyRight &&
+      playerRight > enemyLeft &&
+      playerTop < enemyBottom &&
+      playerBottom > enemyTop
+    ) {
+      damagePlayer(def.attack, enemy.x);
+      break;
+    }
+  }
+}
+
+// プレイヤーにダメージを与える
+function damagePlayer(damage, sourceX) {
+  GameState.playerState.hp -= damage;
+
+  if (GameState.playerState.hp < 0) {
+    GameState.playerState.hp = 0;
+  }
+
+  // 無敵時間を設定
+  GameState.playerState.invincibleTime = PLAYER_INVINCIBLE_DURATION;
+
+  // ノックバック方向を計算（ダメージ源から離れる方向）
+  const player = GameState.playerState.entity;
+  if (sourceX < player.x) {
+    GameState.playerState.knockbackVx = PLAYER_KNOCKBACK_SPEED;
+  } else {
+    GameState.playerState.knockbackVx = -PLAYER_KNOCKBACK_SPEED;
+  }
+
+  // 少し上に飛ぶ
+  player.vy = -2;
+}
+
+// プレイヤーが無敵状態かどうか
+function isPlayerInvincible() {
+  return GameState.playerState.invincibleTime > 0;
 }

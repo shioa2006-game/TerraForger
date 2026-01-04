@@ -4,6 +4,7 @@ const leftSidebarElements = {
   gameTime: null,
   timePeriod: null,
   guideText: null,
+  statusHp: null,
 };
 
 // 左サイドバーの初期化
@@ -11,6 +12,7 @@ function initLeftSidebar() {
   leftSidebarElements.gameTime = document.getElementById("gameTime");
   leftSidebarElements.timePeriod = document.getElementById("timePeriod");
   leftSidebarElements.guideText = document.getElementById("guideText");
+  leftSidebarElements.statusHp = document.getElementById("statusHp");
 }
 
 // timeOfDay (0-1) をゲーム内時刻に変換
@@ -82,7 +84,19 @@ function updateLeftSidebarTime() {
   leftSidebarElements.timePeriod.className = "time-period " + (period.isDay ? "day" : "night");
 }
 
+// HP表示を更新
+function updateLeftSidebarStatus() {
+  if (!leftSidebarElements.statusHp) {
+    return;
+  }
+
+  const hp = GameState.playerState.hp;
+  const maxHp = GameState.playerState.maxHp;
+  leftSidebarElements.statusHp.textContent = hp + " / " + maxHp;
+}
+
 // 左サイドバー全体の更新
 function updateLeftSidebar() {
   updateLeftSidebarTime();
+  updateLeftSidebarStatus();
 }
