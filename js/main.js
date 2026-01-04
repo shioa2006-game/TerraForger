@@ -32,6 +32,7 @@ function draw() {
   GameState.environment.lastTimeOfDay = GameState.environment.timeOfDay;
   drawBackground();
   updatePlayer();
+  updateEnemies();
   updateParticles();
   updateDrops();
   updatePickaxeSwing();
