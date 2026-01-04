@@ -4,6 +4,7 @@ function preload() {
   GameState.itemSprite = loadImage("assets/items.png");
   GameState.dropSprite = loadImage("assets/drops.png");
   GameState.placeableSprite = loadImage("assets/placeables.png");
+  GameState.enemySprite = loadImage("assets/enemies.png");
 }
 
 function setup() {
@@ -15,6 +16,7 @@ function setup() {
 
   initWorld();
   initPlayer();
+  initEnemies();
   initInventory();
   initUI();
   initBackground();
@@ -42,6 +44,7 @@ function draw() {
   drawWorld();
   drawDrops();
   drawPlayer();
+  drawEnemies();
   drawParticles();
   drawBlockCursor();
   pop();
